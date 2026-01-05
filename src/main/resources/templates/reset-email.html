@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${type} + ' Notification'">Account Notification</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; padding: 20px;">
+    <tr>
+        <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0"
+                   style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                <tr>
+                    <td style="padding: 30px;">
+
+                        <h2 style="margin-top: 0; color: #333;">
+                            Hello <span th:text="${name}">User</span>,
+                        </h2>
+                        <p style="font-size: 15px; color: #555;">
+                            You requested a <strong th:text="${type}">password reset</strong>.
+                        </p>
+                        <p style="font-size: 15px; color: #555;">
+                            Please click the button below to continue:
+                        </p>
+                        <p style="text-align: center; margin: 30px 0;">
+                            <a th:href="${actionLink}"
+                               style="background-color: #007BFF; color: #ffffff; padding: 14px 24px;
+                                      text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: bold;
+                                      display: inline-block;">
+                                Continue
+                            </a>
+                        </p>
+                        <p style="font-size: 13px; color: #555;">
+                            If the button above doesn’t work, copy and paste this link into your browser:
+                        </p>
+                        <p style="word-break: break-all;">
+                            <a th:href="${actionLink}" th:text="${actionLink}" style="color: #007BFF; font-size: 13px;"></a>
+                        </p>
+                        <p style="font-size: 13px; color: #888; margin-top: 20px;">
+                            This link will expire in <span th:text="${expirationHours}">15</span> minutes.
+                        </p>
+                        <p style="margin-top: 40px; font-size: 14px; color: #333;">
+                            Best regards,<br/>
+                            <strong>Handypros Hospitality</strong>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
