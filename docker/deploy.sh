@@ -13,7 +13,8 @@ mkdir -p "$HOME/snapng"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] 🚀 Starting deployment..." | tee -a $LOG_FILE
 
 # Load environment variables from GitHub secrets
-export DOCKERHUB_USERNAME="${DOCKERHUB_USERNAME}"
+#export DOCKERHUB_USERNAME="${DOCKERHUB_USERNAME}"
+export DOCKERHUB_USERNAME="snapapp"
 export SPRING_DATASOURCE_URL="${SPRING_DATASOURCE_URL}"
 export SPRING_DATASOURCE_USERNAME="${SPRING_DATASOURCE_USERNAME}"
 export SPRING_DATASOURCE_PASSWORD="${SPRING_DATASOURCE_PASSWORD}"
