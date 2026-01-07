@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  snapng-app:
+    image: snapapp/snapng:staging-latest
+    container_name: snapng-staging
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: staging
+      SPRING_DATASOURCE_URL: $SPRING_DATASOURCE_URL
+      SPRING_DATASOURCE_USERNAME: $SPRING_DATASOURCE_USERNAME
+      SPRING_DATASOURCE_PASSWORD: $SPRING_DATASOURCE_PASSWORD
+      JWT_SECRET: $JWT_SECRET
+      SENDGRID_API_KEY: $SENDGRID_API_KEY
+      CLOUDINARY_CLOUD_NAME: $CLOUDINARY_CLOUD_NAME
+      CLOUDINARY_API_KEY: $CLOUDINARY_API_KEY
+      CLOUDINARY_API_SECRET: $CLOUDINARY_API_SECRET
+      SPRING_MAIL_PASSWORD: $SPRING_MAIL_PASSWORD
+      AWS_S3_BUCKET_NAME: $AWS_S3_BUCKET_NAME
+      AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+      AWS_REGION: us-east-1
+      FIREBASE_CONFIG: $FIREBASE_CONFIG
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - snapng-net
+
+networks:
+  snapng-net:
+    driver: bridge

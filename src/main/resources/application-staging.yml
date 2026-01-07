@@ -1,0 +1,89 @@
+spring:
+  application:
+    name: snapng
+  profiles:
+    active: staging
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:20000}
+      maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:5}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:true}
+            required: true
+
+server:
+  port: ${SERVER_PORT:8083}
+  servlet:
+    context-path: /
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: ${APP_JWT_EXPIRATION_MS:3600000}
+  refresh-expiration-ms: ${APP_JWT_REFRESH_EXPIRATION_MS:604800000}
+
+app:
+  email-url: ${APP_EMAIL_URL:https://devapi.handypros.ng/hospitality/verify-email?token=}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE:health,info}
+  endpoint:
+    health:
+      show-details: ${MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS:always}
+      access: ${MANAGEMENT_ENDPOINT_HEALTH_ACCESS:unrestricted}
+    info:
+      access: ${MANAGEMENT_ENDPOINT_INFO_ACCESS:unrestricted}
+
+logging:
+  level:
+    root: INFO
+    com.snappapp: DEBUG
+    com.culturehub.investapp: ${LOGGING_LEVEL_COM_CULTUREHUB_INVESTAPP:DEBUG}
+    org.springframework.security: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY:ERROR}
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY_CONFIG:ERROR}
+    com.handypros.travelbooking.config.security: ${LOGGING_LEVEL_COM_HANDYPROS_TRAVELBOOKING_CONFIG_SECURITY:DEBUG}
+  file:
+    name: /tmp/snapng.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 10
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+
+paystack:
+  base-url: ${PAYSTACK_BASE_URL:https://api.paystack.co}
+  secret-key: ${PAYSTACK_SECRET_KEY}
+  public-key: ${PAYSTACK_PUBLIC_KEY:pk_live_b6e573f5f3931a2a708f6f38564260b912155b00}
+  callback-url: ${PAYSTACK_CALLBACK_URL:https://api.handypros.ng/paystack/callback}
+  webhook-secret: ${PAYSTACK_WEBHOOK_SECRET:https://api.handypros.ng/hospitality/api/v1/payments/webhook}
+
+debug: ${DEBUG:false}
