@@ -85,4 +85,9 @@ public class AuthController {
         return ResponseEntity.ok("Logged out successfully");
     }
 
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("OK.....");
+    }
+
 }
