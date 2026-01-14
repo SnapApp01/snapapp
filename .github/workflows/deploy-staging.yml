@@ -43,37 +43,37 @@ jobs:
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/snapng:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/snapng:buildcache,mode=max
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to AWS EC2
-        env:
-          EC2_HOST: ${{ secrets.AWS_EC2_HOST }}
-          EC2_USER: ${{ secrets.AWS_EC2_USER }}
-          EC2_KEY: ${{ secrets.AWS_EC2_KEY }}
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$EC2_KEY" > ~/.ssh/deploy_key.pem
-          chmod 600 ~/.ssh/deploy_key.pem
-          ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts 2>/dev/null
-          
-          # Copy deployment files
-          scp -i ~/.ssh/deploy_key.pem -o StrictHostKeyChecking=no \
-            docker-compose.staging.yml $EC2_USER@$EC2_HOST:~/snapng/docker-compose.yml
-          
-          scp -i ~/.ssh/deploy_key.pem -o StrictHostKeyChecking=no \
-            docker/deploy.sh $EC2_USER@$EC2_HOST:~/snapng/deploy.sh
-          
-          # Run deployment
-          ssh -i ~/.ssh/deploy_key.pem -o StrictHostKeyChecking=no \
-            $EC2_USER@$EC2_HOST 'chmod +x ~/snapng/deploy.sh && ~/snapng/deploy.sh'
-
-      - name: Check deployment status
-        if: failure()
-        run: echo "❌ Deployment failed. Check EC2 logs at ~/snapng/deploy.log"
+  # deploy:
+  #   needs: build-and-push
+  #   runs-on: ubuntu-latest
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Deploy to AWS EC2
+  #       env:
+  #         EC2_HOST: ${{ secrets.AWS_EC2_HOST }}
+  #         EC2_USER: ${{ secrets.AWS_EC2_USER }}
+  #         EC2_KEY: ${{ secrets.AWS_EC2_KEY }}
+  #         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  #       run: |
+  #         mkdir -p ~/.ssh
+  #         echo "$EC2_KEY" > ~/.ssh/deploy_key.pem
+  #         chmod 600 ~/.ssh/deploy_key.pem
+  #         ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts 2>/dev/null
+  #
+  #         # Copy deployment files
+  #         scp -i ~/.ssh/deploy_key.pem -o StrictHostKeyChecking=no \
+  #           docker-compose.staging.yml $EC2_USER@$EC2_HOST:~/snapng/docker-compose.yml
+  #
+  #         scp -i ~/.ssh/deploy_key.pem -o StrictHostKeyChecking=no \
+  #           docker/deploy.sh $EC2_USER@$EC2_HOST:~/snapng/deploy.sh
+  #
+  #         # Run deployment
+  #         ssh -i ~/.ssh/deploy_key.pem -o StrictHostKeyChecking=no \
+  #           $EC2_USER@$EC2_HOST 'chmod +x ~/snapng/deploy.sh && ~/snapng/deploy.sh'
+  #
+  #     - name: Check deployment status
+  #       if: failure()
+  #       run: echo "❌ Deployment failed. Check EC2 logs at ~/snapng/deploy.log"
