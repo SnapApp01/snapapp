@@ -173,6 +173,28 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public GenericResponse resendOtp(String email) {
+        SnapUser user = userRepository.findByEmail(email).orElseThrow( () -> new UserNotFoundException("User not found for provided email:" + email));
+        if (user.isEmailVerified()) {
+            throw new UserAlreadyExistsException("User already verified");
+        }
+
+        try {
+            verificationCodeService.sendOtpCode(email);
+
+            return new GenericResponse("Verification code resent", HttpStatus.OK);
+
+        } catch (Exception e) {
+            log.error("Failed to resend OTP for email={}. error={}", email, e.getMessage(), e);
+
+            return new GenericResponse(
+                    "Failed to resend code, please try again later.",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @Override
     public GenericResponse changePassword(ChangePasswordRequest request) {
         SnapUser user = securityUtil.getCurrentLoggedInUser();
 

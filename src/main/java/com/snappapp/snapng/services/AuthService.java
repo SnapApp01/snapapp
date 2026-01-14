@@ -14,6 +14,7 @@ public interface AuthService {
 
     GenericResponse login(LoginRequest loginRequest);
     GenericResponse verifyEmail(String email, String code);
+    GenericResponse resendOtp(String email);
     GenericResponse changePassword(ChangePasswordRequest request);
     GenericResponse deleteAccount(Long userId);
     GenericResponse refreshToken(RefreshTokenRequest request);

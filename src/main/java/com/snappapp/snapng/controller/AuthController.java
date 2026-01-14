@@ -32,6 +32,11 @@ public class AuthController {
         GenericResponse genericResponse = authService.verifyEmail(email, code);
         return new ResponseEntity<>(genericResponse, genericResponse.getHttpStatus());
     }
+    @GetMapping("/resend-otp")
+    public ResponseEntity<GenericResponse> resendOtp(@RequestParam String email) {
+        GenericResponse response = authService.resendOtp(email);
+        return new ResponseEntity<>(response, response.getHttpStatus());
+    }
 
         @PostMapping("/login")
         public ResponseEntity<GenericResponse> login(@RequestBody LoginRequest loginRequest) {
