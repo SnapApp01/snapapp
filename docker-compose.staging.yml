@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   snapng-app:
-    image: snapapp/snapng:staging-latest
+    image: $DOCKERHUB_USERNAME/snapng:staging-latest
     container_name: snapng-staging
     ports:
       - "8083:8083"

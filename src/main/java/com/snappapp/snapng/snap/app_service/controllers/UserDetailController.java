@@ -87,22 +87,20 @@ public UserDetailResponse update(
     return userDetailService.getUser(user.getId());
 }
 
+//@PostMapping("/business")
+//public UserDetailResponse createBusiness(
+//        @Validated @RequestBody CreateUserDetailWithBusinessRequest request) {
 //
-//    @PostMapping("/business")
-//    public UserDetailResponse createBusiness(@RequestHeader(Constants.HEADER_USER_ID)String userId,
-//            @Validated @RequestBody CreateUserDetailWithBusinessRequest request) {
-//        request.setUserId(userId);
-//        userDetailService.createUser(request);
-//        return userDetailService.getUser(request.getUserId());
-//    }
-@PostMapping("/business")
-public UserDetailResponse createBusiness(
-        @Validated @RequestBody CreateUserDetailWithBusinessRequest request) {
+//    SnapUser user = securityUtil.getCurrentLoggedInUser();
+//    userDetailService.createUser(request);
+//    return userDetailService.getUser(user.getId());
+//}
 
-    SnapUser user = securityUtil.getCurrentLoggedInUser();
-    userDetailService.createUser(request);
-    return userDetailService.getUser(user.getId());
-}
+    @PostMapping("/business")
+    public ResponseEntity<GenericResponse> createBusiness(@RequestBody @Valid CreateUserDetailWithBusinessRequest request) {
+        GenericResponse response = userDetailService.createBusinessUser(request);
+        return new ResponseEntity<>(response, response.getHttpStatus());
+    }
 
 //    @PutMapping("/business")
 //    public UserDetailResponse addBusiness(@Validated @RequestBody AddBusinessRequest request, @RequestHeader(Constants.HEADER_USER_ID) String userId) {

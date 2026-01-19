@@ -6,6 +6,7 @@ import com.snappapp.snapng.models.approles.Role;
 import com.snappapp.snapng.repository.RoleRepository;
 import com.snappapp.snapng.services.VerificationCodeService;
 import com.snappapp.snapng.snap.app_service.apimodels.CreateUserDetailRequest;
+import com.snappapp.snapng.snap.app_service.apimodels.CreateUserDetailWithBusinessRequest;
 import com.snappapp.snapng.snap.data_lib.entities.Business;
 import com.snappapp.snapng.snap.data_lib.entities.SnapUser;
 import com.snappapp.snapng.snap.data_lib.entities.Wallet;
@@ -72,13 +73,21 @@ public class SnapUserServiceImpl implements SnapUserService {
     @Override
     @Transactional
     public SnapUser createUser(CreateUserDetailRequest registerRequest) {
-        if (registerRequest.getEmail() == null || registerRequest.getEmail().trim().isEmpty()) {
-            throw new InvalidCredentialsException("Provide valid email...");
-        }
-        if (repo.existsByEmail(registerRequest.getEmail())) {
-            throw new UserAlreadyExistsException("User already exists");
-        }
-        SnapUser user = createUserTemplate(registerRequest);
+        validateEmail(registerRequest.getEmail(), "User already exists");
+
+        SnapUser user = buildUser(registerRequest, "SNAP_USER");
+        SnapUser savedUser = repo.save(user);
+        verificationCodeService.sendOtpCode(user.getEmail());
+
+        return savedUser;
+    }
+
+    @Override
+    @Transactional
+    public SnapUser createBusinessUser(CreateUserDetailWithBusinessRequest registerRequest) {
+        validateEmail(registerRequest.getEmail(), "Driver already exists");
+
+        SnapUser user = buildUser(registerRequest, "ROLE_DRIVER");
         SnapUser savedUser = repo.save(user);
         verificationCodeService.sendOtpCode(user.getEmail());
 
@@ -121,23 +130,34 @@ public class SnapUserServiceImpl implements SnapUserService {
         return repo.findAllUsersNoBusiness();
     }
 
-    private SnapUser createUserTemplate(CreateUserDetailRequest signUpRequestDto) {
-        Set<Role> roles = new HashSet<>();
-        Role role = roleRepository.findByRoleName("SNAP_USER")
-                .orElseThrow(() -> new RoleNotFoundException("SNAP_USER not found in database"));
-        roles.add(role);
+    private SnapUser buildUser(CreateUserDetailRequest request, String roleName) {
+        Role role = roleRepository.findByRoleName(roleName)
+                .orElseThrow(() ->
+                        new RoleNotFoundException(roleName + " not found in database"));
+
         return SnapUser.builder()
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .firstname(signUpRequestDto.getFirstname())
-                .lastname(signUpRequestDto.getLastname())
-                .phoneNumber(signUpRequestDto.getPhoneNumber())
+                .firstname(request.getFirstname())
+                .lastname(request.getLastname())
+                .phoneNumber(request.getPhoneNumber())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .balance(0L)
-                .businesses(new HashSet<>())
                 .identifier(TimeBasedUserIdGenerator.generate())
-                .roles(roles)
-                .email(signUpRequestDto.getEmail())
-                .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
+                .businesses(new HashSet<>())
+                .roles(Set.of(role))
                 .build();
     }
+
+    private void validateEmail(String email, String existsMessage) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new InvalidCredentialsException("Provide valid email...");
+        }
+        if (repo.existsByEmail(email)) {
+            throw new UserAlreadyExistsException(existsMessage);
+        }
+    }
+
+
 }
