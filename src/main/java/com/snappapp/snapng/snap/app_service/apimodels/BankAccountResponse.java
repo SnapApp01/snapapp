@@ -3,11 +3,12 @@ package com.snappapp.snapng.snap.app_service.apimodels;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.snappapp.snapng.snap.data_lib.entities.BankAccount;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
-@Getter
 public class BankAccountResponse {
     @JsonIgnore
     private BankAccount bankAccount;

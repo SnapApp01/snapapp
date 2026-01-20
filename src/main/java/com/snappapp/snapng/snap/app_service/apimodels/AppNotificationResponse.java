@@ -2,11 +2,12 @@ package com.snappapp.snapng.snap.app_service.apimodels;
 
 import com.snappapp.snapng.snap.data_lib.entities.AppNotification;
 import com.snappapp.snapng.snap.utils.utilities.DateTimeUtils;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class AppNotificationResponse {
     private String message;
     private String title;

@@ -1,8 +1,11 @@
 package com.snappapp.snapng.snap.data_lib.service;
 
+import com.snappapp.snapng.dto.GenericResponse;
 import com.snappapp.snapng.snap.app_service.apimodels.CreateUserDetailRequest;
+import com.snappapp.snapng.snap.app_service.apimodels.CreateUserDetailWithBusinessRequest;
 import com.snappapp.snapng.snap.data_lib.entities.Business;
 import com.snappapp.snapng.snap.data_lib.entities.SnapUser;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -13,10 +16,12 @@ public interface SnapUserService {
     SnapUser getUserById(Long id);
 
     boolean checkUserWithIdExists(String id);
-    SnapUser createUser(CreateUserDetailRequest dto);
+    GenericResponse createUser(CreateUserDetailRequest dto);
     SnapUser updateUser(SnapUser user);
-    SnapUser addBusinessToUser(SnapUser user, Business business);
+    void addBusinessToUser(SnapUser user, Business business);
     SnapUser withWallet(Long id);
     SnapUser withDeviceKey(String uid,String deviceKey);
     List<SnapUser> getUsers();
+
+    GenericResponse createBusinessUser(CreateUserDetailWithBusinessRequest request);
 }

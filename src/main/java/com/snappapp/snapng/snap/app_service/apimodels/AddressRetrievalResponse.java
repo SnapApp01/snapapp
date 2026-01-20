@@ -2,10 +2,11 @@ package com.snappapp.snapng.snap.app_service.apimodels;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.snappapp.snapng.snap.data_lib.entities.Location;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
-@Getter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class AddressRetrievalResponse {
     private Location location;

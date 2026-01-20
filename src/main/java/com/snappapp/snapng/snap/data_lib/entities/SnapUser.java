@@ -117,13 +117,15 @@ public class SnapUser extends BaseEntity {
 
     private String walletKey;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.EAGER,
+            cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(
             name = "users_businesses",
-            joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "business_id", referencedColumnName = "id")
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "business_id")
     )
-    private Set<Business> businesses;
+    @Builder.Default
+    private Set<Business> businesses = new HashSet<>();
 
     private String deviceToken;
 

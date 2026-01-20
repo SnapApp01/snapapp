@@ -11,6 +11,7 @@ import com.snappapp.snapng.snap.data_lib.service.BusinessService;
 import com.snappapp.snapng.snap.data_lib.service.WalletService;
 import com.snappapp.snapng.snap.utils.utilities.IdUtilities;
 import com.snappapp.snapng.snap.utils.utilities.StringUtilities;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,7 @@ public class BusinessServiceImpl implements BusinessService {
         return repo.save(business);
     }
 
+    @Transactional
     @Override
     public Business createBusiness(BusinessCreationDto dto) {
         Business business = new Business();

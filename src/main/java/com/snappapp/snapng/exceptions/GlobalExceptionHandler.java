@@ -63,6 +63,19 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(value = OtpDeliveryException.class)
+    public ResponseEntity<GenericResponse> OtpDeliveryExceptionHandler(OtpDeliveryException exception) {
+        return ResponseEntity
+                .status(HttpStatus.EXPECTATION_FAILED)
+                .body(
+                        GenericResponse.builder()
+                                .isSuccess(false)
+                                .message(exception.getMessage())
+                                .httpStatus(HttpStatus.EXPECTATION_FAILED)
+                                .build()
+                );
+    }
+
     @ExceptionHandler(value = TokenRefreshException.class)
     public ResponseEntity<GenericResponse> TokenRefreshExceptionHandler(TokenRefreshException exception) {
         return ResponseEntity

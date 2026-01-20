@@ -1,6 +1,7 @@
 package com.snappapp.snapng.services.serviceImpl;
 
 import com.snappapp.snapng.exceptions.InvalidTokenException;
+import com.snappapp.snapng.exceptions.OtpDeliveryException;
 import com.snappapp.snapng.exceptions.ResourceNotFoundException;
 import com.snappapp.snapng.models.VerificationCode;
 import com.snappapp.snapng.repository.VerificationCodeRepository;
@@ -25,16 +26,60 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
         this.emailService = emailService;
     }
 
+//
+//    @Override
+//    @Transactional
+//    public void sendOtpCode(String email) {
+//        try {
+//            log.info("Starting OTP generation for userEmail={}", mask(email));
+//
+//            String code = OtpUtil.generateSixDigitCode();
+//            VerificationCode existing = verificationCodeRepository.findByEmail(email);
+//
+//            if (existing == null) {
+//                log.info("No existing OTP entry found. Creating new OTP record for userEmail={}", mask(email));
+//                existing = new VerificationCode();
+//                existing.setEmail(email);
+//            } else {
+//                log.info("Existing OTP record found. Updating OTP for userEmail={}", mask(email));
+//            }
+//
+//            existing.setCode(code);
+//            existing.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+//            verificationCodeRepository.save(existing);
+//
+//            log.info("OTP saved successfully. Sending OTP email to userEmail={}", mask(email));
+//            log.info("OTP saved successfully. Sending OTP otp={}", existing.getCode());
+//
+//            emailService.sendOtp(
+//                    email,
+//                    "Your Verification Code",
+//                    "Your verification code is: " + code + "\nThis code expires in 10 minutes."
+//            );
+//
+//            log.info("OTP email sent successfully to userEmail={}", mask(email));
+//
+//        } catch (Exception ex) {
+//            log.error(
+//                    "Failed to generate or send OTP to userEmail={}",
+//                    mask(email),
+//                    ex
+//            );
+//        }
+//
+//    }
 
     @Override
     @Transactional
     public void sendOtpCode(String email) {
+        log.info("Starting OTP generation for userEmail={}", mask(email));
+
         try {
-            log.info("Starting OTP generation for userEmail={}", mask(email));
-
+            // Generate OTP
             String code = OtpUtil.generateSixDigitCode();
-            VerificationCode existing = verificationCodeRepository.findByEmail(email);
 
+            // Find existing verification code
+            VerificationCode existing = verificationCodeRepository.findByEmail(email);
             if (existing == null) {
                 log.info("No existing OTP entry found. Creating new OTP record for userEmail={}", mask(email));
                 existing = new VerificationCode();
@@ -43,13 +88,16 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
                 log.info("Existing OTP record found. Updating OTP for userEmail={}", mask(email));
             }
 
+            // Set OTP and expiry
             existing.setCode(code);
             existing.setExpiresAt(LocalDateTime.now().plusMinutes(10));
-            verificationCodeRepository.save(existing);
 
-            log.info("OTP saved successfully. Sending OTP email to userEmail={}", mask(email));
+            // Save OTP
+            verificationCodeRepository.save(existing);
+            log.info("OTP saved successfully for userEmail={}", mask(email));
             log.info("OTP saved successfully. Sending OTP otp={}", existing.getCode());
 
+            // Send OTP email
             emailService.sendOtp(
                     email,
                     "Your Verification Code",
@@ -59,10 +107,13 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             log.info("OTP email sent successfully to userEmail={}", mask(email));
 
         } catch (Exception ex) {
-            log.error("Failed to generate or send OTP to userEmail={}. error={}", mask(email), ex.getMessage(), ex);
-            throw ex;
+            log.error(
+                    "Failed to generate or send OTP for userEmail={}",
+                    mask(email),
+                    ex
+            );
+            throw new OtpDeliveryException("Unable to send OTP. Please try again later.");
         }
-
     }
 
     @Override
@@ -99,7 +150,6 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
         }
     }
 
-    // Helper — masks user email
     private String mask(String email) {
         if (email == null || !email.contains("@")) return "****";
         String[] parts = email.split("@");

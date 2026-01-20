@@ -1,12 +1,11 @@
 package com.snappapp.snapng.snap.app_service.apimodels;
 
 import com.snappapp.snapng.snap.data_lib.enums.DeliveryRequestStatus;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class DeliveryRequestCreationResponse {
     private String trackId;

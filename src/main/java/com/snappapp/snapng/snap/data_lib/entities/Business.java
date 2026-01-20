@@ -3,15 +3,18 @@ package com.snappapp.snapng.snap.data_lib.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.snappapp.snapng.models.baseclass.BaseEntity;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "businesses")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Business extends BaseEntity {
     private String name;
     @Column(unique = true)
@@ -29,5 +32,6 @@ public class Business extends BaseEntity {
     private Wallet wallet;
     @JsonIgnore
     @ManyToMany(mappedBy = "businesses", fetch = FetchType.LAZY)
-    private Set<SnapUser> users;
+    @Builder.Default
+    private Set<SnapUser> users = new HashSet<>();
 }

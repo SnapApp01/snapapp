@@ -1,10 +1,11 @@
 package com.snappapp.snapng.snap.admin.apimodels;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class LoginApiResponse {
     private String fullname;
     private String token;

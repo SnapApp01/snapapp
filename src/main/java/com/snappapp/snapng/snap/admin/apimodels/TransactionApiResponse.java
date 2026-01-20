@@ -3,15 +3,14 @@ package com.snappapp.snapng.snap.admin.apimodels;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.snappapp.snapng.snap.data_lib.enums.SnapUserType;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class TransactionApiResponse {
     private String id;

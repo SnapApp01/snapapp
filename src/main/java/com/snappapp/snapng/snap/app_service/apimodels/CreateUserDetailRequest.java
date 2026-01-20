@@ -11,6 +11,7 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class CreateUserDetailRequest {
 
     @NotBlank(message = "Firstname is required!")

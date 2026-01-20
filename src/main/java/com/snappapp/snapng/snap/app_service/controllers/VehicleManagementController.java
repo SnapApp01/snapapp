@@ -2,7 +2,6 @@ package com.snappapp.snapng.snap.app_service.controllers;
 
 import com.snappapp.snapng.snap.app_service.apimodels.AddVehicleRequest;
 import com.snappapp.snapng.snap.app_service.apimodels.VehicleRetrievalResponse;
-import com.snappapp.snapng.snap.app_service.config.Constants;
 import com.snappapp.snapng.snap.app_service.services.VehicleManagementService;
 import com.snappapp.snapng.snap.data_lib.entities.SnapUser;
 import com.snappapp.snapng.snap.data_lib.enums.VehicleType;

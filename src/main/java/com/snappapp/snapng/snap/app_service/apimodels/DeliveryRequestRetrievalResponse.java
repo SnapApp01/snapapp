@@ -8,13 +8,14 @@ import com.snappapp.snapng.snap.data_lib.enums.DeliveryRequestStatus;
 import com.snappapp.snapng.snap.data_lib.enums.SendType;
 import com.snappapp.snapng.snap.data_lib.enums.VehicleType;
 import com.snappapp.snapng.snap.utils.utilities.MoneyUtilities;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-@Getter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class DeliveryRequestRetrievalResponse {
     @JsonIgnore

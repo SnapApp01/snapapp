@@ -12,6 +12,7 @@ import com.snappapp.snapng.snap.data_lib.entities.SnapUser;
 import com.snappapp.snapng.snap.data_lib.service.BusinessService;
 import com.snappapp.snapng.snap.data_lib.service.SnapUserService;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -48,22 +49,6 @@ public class UserDetailService {
                 .bookBalanceInLong(user.getWallet().getBookBalance())
                 .email(user.getEmail())
                 .firstname(user.getFirstname())
-                .build();
-    }
-
-    public GenericResponse createUser(CreateUserDetailRequest request) {
-
-        SnapUser user = userService.createUser(request);
-        if(request instanceof CreateUserDetailWithBusinessRequest) {
-            AddBusinessRequest addBusinessRequest = new AddBusinessRequest();
-            addBusinessRequest.setCompanyName(((CreateUserDetailWithBusinessRequest) request).getBusinessName());
-            addBusiness(addBusinessRequest,user);
-        }
-        UserDetailResponse userDetailResponse = getUser(user.getId());
-        return GenericResponse.builder()
-                .isSuccess(true)
-                .message("Account created successfully... Check and verify your email")
-                .httpStatus(HttpStatus.CREATED)
                 .build();
     }
 
@@ -108,4 +93,5 @@ public class UserDetailService {
                 .build());
         userService.addBusinessToUser(user,business);
     }
+
 }

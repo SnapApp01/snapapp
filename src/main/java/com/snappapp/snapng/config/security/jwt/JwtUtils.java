@@ -27,7 +27,7 @@ public class JwtUtils {
     private int jwtRefreshExpirationMs;
 
     private Key key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
     public String generateJwtToken(Authentication authentication) {

@@ -1,12 +1,11 @@
 package com.snappapp.snapng.snap.app_service.apimodels;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
-@Getter
-@Setter
 public class FundWalletResponse {
     private String url;
     private String provider;

@@ -1,6 +1,5 @@
 package com.snappapp.snapng.snap.admin.controller;
 
-import com.snappapp.snapng.snap.admin.apimodels.BlockIdRequest;
 import com.snappapp.snapng.snap.admin.apimodels.IdRequest;
 import com.snappapp.snapng.snap.admin.apimodels.PartnerApiResponse;
 import com.snappapp.snapng.snap.admin.apimodels.VehicleApiResponse;
@@ -38,15 +37,15 @@ public class PartnerController {
         }
         throw new SnapApiException("User with userid not found", ApiResponseCode.ITEM_NOT_FOUND);
     }
-
-    @PutMapping("/status")
-    public void changeUserStatus(@RequestBody BlockIdRequest request)throws SnapApiException {
-        PartnerApiResponse rsp = mockData.getPartnerList().get(request.getId());
-        if(rsp==null){
-            throw new SnapApiException("Partner not found", ApiResponseCode.ITEM_NOT_FOUND);
-        }
-        rsp.setBlocked(request.getBlock());
-    }
+//
+//    @PutMapping("/status")
+//    public void changeUserStatus(@RequestBody BlockIdRequest request)throws SnapApiException {
+//        PartnerApiResponse rsp = mockData.getPartnerList().get(request.getId());
+//        if(rsp==null){
+//            throw new SnapApiException("Partner not found", ApiResponseCode.ITEM_NOT_FOUND);
+//        }
+//        rsp.setBlocked(request.getBlock());
+//    }
 
     @PutMapping("/verify")
     public void verifyPartner(@RequestBody IdRequest request) throws SnapApiException {

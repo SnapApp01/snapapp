@@ -1,6 +1,5 @@
 package com.snappapp.snapng.snap.admin.controller;
 
-import com.snappapp.snapng.snap.admin.apimodels.BlockIdRequest;
 import com.snappapp.snapng.snap.admin.apimodels.UserApiResponse;
 import com.snappapp.snapng.snap.admin.config.MockData;
 import com.snappapp.snapng.snap.api_lib.exceptions.ApiResponseCode;
@@ -36,14 +35,14 @@ public class AdminUserController {
         }
         throw new SnapApiException("User with userid not found", ApiResponseCode.ITEM_NOT_FOUND);
     }
-
-    @PutMapping("/status")
-    public void changeUserStatus(@RequestBody BlockIdRequest request)throws SnapApiException {
-        UserApiResponse rsp = mockData.getUserList().get(request.getId());
-        if(rsp==null){
-            throw new SnapApiException("User with userid not found", ApiResponseCode.ITEM_NOT_FOUND);
-        }
-        rsp.setBlocked(request.getBlock());
-    }
+//
+//    @PutMapping("/status")
+//    public void changeUserStatus(@RequestBody BlockIdRequest request)throws SnapApiException {
+//        UserApiResponse rsp = mockData.getUserList().get(request.getId());
+//        if(rsp==null){
+//            throw new SnapApiException("User with userid not found", ApiResponseCode.ITEM_NOT_FOUND);
+//        }
+//        rsp.setBlocked(request.getBlock());
+//    }
 
 }

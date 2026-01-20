@@ -8,11 +8,12 @@ import com.snappapp.snapng.snap.utils.annotations.DateTimeValidate;
 import com.snappapp.snapng.snap.utils.enums.DateTimeType;
 import com.snappapp.snapng.snap.utils.utilities.DateTimeUtils;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CreateDeliveryRequest {
     private VehicleType vehicle;

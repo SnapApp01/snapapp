@@ -4,14 +4,15 @@ import com.snappapp.snapng.snap.data_lib.entities.WalletTransaction;
 import com.snappapp.snapng.snap.data_lib.enums.WalletTransactionStatus;
 import com.snappapp.snapng.snap.data_lib.enums.WalletTransactionType;
 import com.snappapp.snapng.snap.utils.utilities.MoneyUtilities;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class WalletTransactionResponse {
 
     private BigDecimal amount;

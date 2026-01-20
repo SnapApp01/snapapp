@@ -1,10 +1,11 @@
 package com.snappapp.snapng.snap.app_service.apimodels;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class WithdrawalRequest {
     private String narration;
     private Long amount;

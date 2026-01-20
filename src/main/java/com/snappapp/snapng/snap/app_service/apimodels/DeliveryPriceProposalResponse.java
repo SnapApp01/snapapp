@@ -5,10 +5,14 @@ import com.snappapp.snapng.snap.data_lib.entities.DeliveryPriceProposal;
 import com.snappapp.snapng.snap.data_lib.enums.FeeProposalStatus;
 import com.snappapp.snapng.snap.utils.utilities.MoneyUtilities;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class DeliveryPriceProposalResponse {
     private DeliveryPriceProposal proposal;
 

@@ -8,7 +8,6 @@ import com.snappapp.snapng.snap.data_lib.service.SnapUserService;
 import com.snappapp.snapng.utills.SecurityUtil;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -17,25 +16,63 @@ import org.springframework.web.bind.annotation.*;
 public class UserDetailController {
 
     private final UserDetailService userDetailService;
-    private final SnapUserService userService;
+    private final SnapUserService snapUserService;
     private final SecurityUtil securityUtil;
 
-    public UserDetailController(UserDetailService userDetailService, SnapUserService userService, SecurityUtil securityUtil) {
+    public UserDetailController(UserDetailService userDetailService, SnapUserService snapUserService, SecurityUtil securityUtil) {
         this.userDetailService = userDetailService;
-        this.userService = userService;
+        this.snapUserService = snapUserService;
         this.securityUtil = securityUtil;
     }
-
-//    @GetMapping
-//    public UserDetailResponse get(@RequestHeader(Constants.HEADER_USER_ID) String userId){
-//        return userDetailService.getUser(userId);
-//    }
 
     @GetMapping
     public UserDetailResponse get() {
         SnapUser user = securityUtil.getCurrentLoggedInUser();
         return userDetailService.getUser(user.getId());
     }
+
+
+    @PostMapping
+    public ResponseEntity<GenericResponse> create(@RequestBody @Valid CreateUserDetailRequest request) {
+        GenericResponse response = snapUserService.createUser(request);
+        return new ResponseEntity<>(response, response.getHttpStatus());
+    }
+
+    @PostMapping("/business")
+    public ResponseEntity<GenericResponse> createBusinessUser(@RequestBody @Valid CreateUserDetailWithBusinessRequest request) {
+        GenericResponse response = snapUserService.createBusinessUser(request);
+        return new ResponseEntity<>(response, response.getHttpStatus());
+    }
+
+@PutMapping
+public UserDetailResponse update(
+        @Valid @RequestBody UpdateUserDetailRequest request) {
+
+    SnapUser user = securityUtil.getCurrentLoggedInUser();
+    userDetailService.updateUser(request, user.getId());
+
+    return userDetailService.getUser(user.getId());
+}
+
+@PutMapping("/business")
+public UserDetailResponse addBusiness(
+        @Valid @RequestBody AddBusinessRequest request) {
+
+    SnapUser user = securityUtil.getCurrentLoggedInUser();
+    userDetailService.addBusiness(request, user.getId());
+
+    return userDetailService.getUser(user.getId());
+}
+
+@PutMapping("/business/{status}")
+public UserDetailResponse updateBusinessOnlineStatus(
+        @PathVariable Boolean status) {
+
+    SnapUser user = securityUtil.getCurrentLoggedInUser();
+    userDetailService.updateBusinessStatus(status, user.getId());
+
+    return userDetailService.getUser(user.getId());
+}
 
 //
 //    @PutMapping("/device/{token}")
@@ -57,68 +94,6 @@ public class UserDetailController {
 //            .build();
 //}
 
-//    @PostMapping
-//    public UserDetailResponse create(@RequestHeader(Constants.HEADER_USER_ID)String userId,
-//                                     @Validated @RequestBody CreateUserDetailRequest request) {
-//        request.setUserId(userId);
-//        userDetailService.createUser(request);
-//        return userDetailService.getUser(request.getUserId());
-//    }
-
-    @PostMapping
-    public ResponseEntity<GenericResponse> create(@RequestBody @Valid CreateUserDetailRequest request) {
-        GenericResponse response = userDetailService.createUser(request);
-        return new ResponseEntity<>(response, response.getHttpStatus());
-    }
-
-//    @PutMapping
-//    public UserDetailResponse update(@RequestHeader(Constants.HEADER_USER_ID)String userId,
-//                                     @Validated @RequestBody UpdateUserDetailRequest request){
-//        userDetailService.updateUser(request, userId);
-//        return userDetailService.getUser(userId);
-//    }
-@PutMapping
-public UserDetailResponse update(
-        @Validated @RequestBody UpdateUserDetailRequest request) {
-
-    SnapUser user = securityUtil.getCurrentLoggedInUser();
-    userDetailService.updateUser(request, user.getId());
-
-    return userDetailService.getUser(user.getId());
-}
-
-//
-//    @PostMapping("/business")
-//    public UserDetailResponse createBusiness(@RequestHeader(Constants.HEADER_USER_ID)String userId,
-//            @Validated @RequestBody CreateUserDetailWithBusinessRequest request) {
-//        request.setUserId(userId);
-//        userDetailService.createUser(request);
-//        return userDetailService.getUser(request.getUserId());
-//    }
-@PostMapping("/business")
-public UserDetailResponse createBusiness(
-        @Validated @RequestBody CreateUserDetailWithBusinessRequest request) {
-
-    SnapUser user = securityUtil.getCurrentLoggedInUser();
-    userDetailService.createUser(request);
-    return userDetailService.getUser(user.getId());
-}
-
-//    @PutMapping("/business")
-//    public UserDetailResponse addBusiness(@Validated @RequestBody AddBusinessRequest request, @RequestHeader(Constants.HEADER_USER_ID) String userId) {
-//        userDetailService.addBusiness(request, userId);
-//        return userDetailService.getUser(userId);
-//    }
-@PutMapping("/business")
-public UserDetailResponse addBusiness(
-        @Validated @RequestBody AddBusinessRequest request) {
-
-    SnapUser user = securityUtil.getCurrentLoggedInUser();
-    userDetailService.addBusiness(request, user.getId());
-
-    return userDetailService.getUser(user.getId());
-}
-
 //
 //    @PutMapping("/business/{status}")
 //    public UserDetailResponse updateBusinessOnlineStatus(@PathVariable(name = "status")Boolean status,
@@ -126,14 +101,34 @@ public UserDetailResponse addBusiness(
 //        userDetailService.updateBusinessStatus(status,userId);
 //        return userDetailService.getUser(userId);
 //    }
-@PutMapping("/business/{status}")
-public UserDetailResponse updateBusinessOnlineStatus(
-        @PathVariable Boolean status) {
 
-    SnapUser user = securityUtil.getCurrentLoggedInUser();
-    userDetailService.updateBusinessStatus(status, user.getId());
+    //
+//    @PostMapping("/business")
+//    public UserDetailResponse createBusiness(@RequestHeader(Constants.HEADER_USER_ID)String userId,
+//            @Validated @RequestBody CreateUserDetailWithBusinessRequest request) {
+//        request.setUserId(userId);
+//        userDetailService.createUser(request);
+//        return userDetailService.getUser(request.getUserId());
+//    }
+//@PostMapping("/business")
+//public UserDetailResponse createBusiness(
+//        @Validated @RequestBody CreateUserDetailWithBusinessRequest request) {
+//
+//    SnapUser user = securityUtil.getCurrentLoggedInUser();
+//    userDetailService.createUser(request);
+//    return userDetailService.getUser(user.getId());
+//}
 
-    return userDetailService.getUser(user.getId());
-}
+//    @PutMapping("/business")
+//    public UserDetailResponse addBusiness(@Validated @RequestBody AddBusinessRequest request, @RequestHeader(Constants.HEADER_USER_ID) String userId) {
+//        userDetailService.addBusiness(request, userId);
+//        return userDetailService.getUser(userId);
+//    }
 
+//    @PutMapping
+//    public UserDetailResponse update(@RequestHeader(Constants.HEADER_USER_ID)String userId,
+//                                     @Validated @RequestBody UpdateUserDetailRequest request){
+//        userDetailService.updateUser(request, userId);
+//        return userDetailService.getUser(userId);
+//    }
 }

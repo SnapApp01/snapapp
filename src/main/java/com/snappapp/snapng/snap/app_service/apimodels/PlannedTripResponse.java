@@ -2,13 +2,14 @@ package com.snappapp.snapng.snap.app_service.apimodels;
 
 import com.snappapp.snapng.snap.data_lib.entities.PlannedTrip;
 import com.snappapp.snapng.snap.data_lib.enums.PlannedTripStatus;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class PlannedTripResponse {
     private AddressRetrievalResponse start;
     private AddressRetrievalResponse end;

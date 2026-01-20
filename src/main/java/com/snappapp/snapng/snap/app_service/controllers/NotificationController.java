@@ -1,11 +1,9 @@
 package com.snappapp.snapng.snap.app_service.controllers;
 
 import com.snappapp.snapng.snap.app_service.apimodels.AppNotificationResponse;
-import com.snappapp.snapng.snap.app_service.config.Constants;
 import com.snappapp.snapng.snap.data_lib.entities.SnapUser;
 import com.snappapp.snapng.snap.data_lib.service.AppNotificationService;
 import com.snappapp.snapng.utills.SecurityUtil;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 

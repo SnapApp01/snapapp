@@ -1,13 +1,12 @@
 package com.snappapp.snapng.snap.admin.apimodels;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class CountPerDayResponse {
     private Integer count;
