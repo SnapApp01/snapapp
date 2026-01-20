@@ -21,7 +21,7 @@ public class DataMigration {
     public void migrateData() {
         try {
             int deletedRows = jdbcTemplate.update(
-                    "DELETE FROM user_roles WHERE user_id NOT IN (SELECT id FROM users)"
+                    "DELETE FROM user_roles WHERE user_id NOT IN (SELECT id FROM snap_user)"
             );
             logger.info("Cleaned up {} orphaned user_roles records", deletedRows);
         } catch (Exception e) {
