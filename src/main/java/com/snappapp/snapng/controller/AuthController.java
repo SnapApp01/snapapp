@@ -5,6 +5,7 @@ import com.snappapp.snapng.dto.request.authDTOS.*;
 import com.snappapp.snapng.dto.response.CompleteResetRequest;
 import com.snappapp.snapng.dto.token.RefreshTokenRequest;
 import com.snappapp.snapng.services.AuthService;
+import com.snappapp.snapng.services.PasswordResetService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,9 +23,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, PasswordResetService passwordResetService) {
         this.authService = authService;
+        this.passwordResetService = passwordResetService;
     }
 
     @GetMapping("/verify-email")
@@ -57,29 +60,28 @@ public class AuthController {
         }
 
         @DeleteMapping("/delete/{userId}")
-        @PreAuthorize("hasRole('ROLE_ADMIN')")
         public ResponseEntity<GenericResponse> deleteUser(@PathVariable Long userId){
             GenericResponse genericResponse = authService.deleteAccount(userId);
             return new ResponseEntity<>(genericResponse, genericResponse.getHttpStatus());
         }
 
-//        @PostMapping("/forgot-password")
-//        public ResponseEntity<GenericResponse> forgotPassword(@Valid @RequestBody InitiatePasswordReset request) {
-//            GenericResponse genericResponse = passwordResetService.initiatePasswordReset(request);
-//            return new ResponseEntity<>(genericResponse, genericResponse.getHttpStatus());
-//        }
-//
-//        @GetMapping("/validate-reset-token")
-//        public ResponseEntity<GenericResponse> validateResetToken(@RequestParam String token) {
-//            GenericResponse genericResponse = passwordResetService.validateResetToken(token);
-//            return new ResponseEntity<>(genericResponse, genericResponse.getHttpStatus());
-//        }
-//
-//        @PostMapping("/reset-password")
-//        public ResponseEntity<GenericResponse> resetPassword(@Valid @RequestBody CompleteResetRequest request) {
-//            GenericResponse genericResponse = passwordResetService.completePasswordReset(request);
-//            return  new ResponseEntity<>(genericResponse, genericResponse.getHttpStatus());
-//        }
+        @PostMapping("/forgot-password")
+        public ResponseEntity<GenericResponse> forgotPassword(@Valid @RequestBody InitiatePasswordReset request) {
+            GenericResponse genericResponse = passwordResetService.initiatePasswordReset(request);
+            return new ResponseEntity<>(genericResponse, genericResponse.getHttpStatus());
+        }
+
+        @GetMapping("/validate-reset-token")
+        public ResponseEntity<GenericResponse> validateResetToken(@RequestParam String token) {
+            GenericResponse genericResponse = passwordResetService.validateResetToken(token);
+            return new ResponseEntity<>(genericResponse, genericResponse.getHttpStatus());
+        }
+
+        @PostMapping("/reset-password")
+        public ResponseEntity<GenericResponse> resetPassword(@Valid @RequestBody CompleteResetRequest request) {
+            GenericResponse genericResponse = passwordResetService.completePasswordReset(request);
+            return  new ResponseEntity<>(genericResponse, genericResponse.getHttpStatus());
+        }
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {

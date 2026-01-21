@@ -217,7 +217,12 @@ public class AuthServiceImpl implements AuthService {
         if (optionalUser.isEmpty()){
             throw  new InvalidCredentialsException("User not found with provided id.");
         }
-        userRepository.deleteById(userId);
+        SnapUser user = optionalUser.get();
+        user.setEnabled(false);
+        user.setAccountNonLocked(false);
+        user.setAccountNonExpired(false);
+        user.setActive(false);
+        userRepository.save(user);
         return GenericResponse.builder()
                 .isSuccess(true)
                 .message("Account deleted successfully.")
