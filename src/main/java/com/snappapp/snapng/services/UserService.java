@@ -25,6 +25,8 @@ public interface UserService {
 
     GenericResponse uploadUserProfilePicture(Long userId, MultipartFile file, String description, String mediaType);
 
+    GenericResponse changeUserBusinessStatus(Long id);
+
 //    SnapUser getUserByEmail(String email);
 //    SnapUser getUserById(String id);
 //    boolean checkUserWithIdExists(String id);

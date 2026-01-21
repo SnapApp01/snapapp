@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -50,6 +51,17 @@ public class BusinessServiceImpl implements BusinessService {
     public Business updateOnlineStatus(Business business, boolean online) {
         business.setIsOnline(online);
         return repo.save(business);
+    }
+
+    @Override
+    public void updateBusinessVerificationStatus(SnapUser user) {
+        Optional<Business> business = repo.findByUsersContaining(user);
+        if(business.isEmpty()){
+            throw new ResourceNotFoundException("Business not found for this user");
+        }
+        Business business1 = business.get();
+        business1.setIsVerified(true);
+        repo.save(business1);
     }
 
     @Transactional

@@ -12,6 +12,7 @@ import com.snappapp.snapng.services.MediaService;
 import com.snappapp.snapng.services.UserService;
 import com.snappapp.snapng.snap.data_lib.entities.SnapUser;
 import com.snappapp.snapng.snap.data_lib.repositories.SnapUserRepository;
+import com.snappapp.snapng.snap.data_lib.service.BusinessService;
 import com.snappapp.snapng.utills.SecurityUtil;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -32,11 +33,13 @@ public class UserServiceImpl implements UserService {
     private final SnapUserRepository userRepository;
     private final SecurityUtil securityUtil;
     private final MediaService mediaService;
+    private final BusinessService businessService;
 
-    public UserServiceImpl(SnapUserRepository userRepository, SecurityUtil securityUtil, MediaService mediaService) {
+    public UserServiceImpl(SnapUserRepository userRepository, SecurityUtil securityUtil, MediaService mediaService, BusinessService businessService) {
         this.userRepository = userRepository;
         this.securityUtil = securityUtil;
         this.mediaService = mediaService;
+        this.businessService = businessService;
     }
 
 
@@ -53,6 +56,19 @@ public class UserServiceImpl implements UserService {
         SnapUser user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return new GenericResponse("User found", HttpStatus.OK, user);
+    }
+
+    @Transactional
+    @Override
+    public GenericResponse changeUserBusinessStatus(Long id) {
+        SnapUser user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        businessService.updateBusinessVerificationStatus(user);
+        return GenericResponse.builder()
+                .isSuccess(true)
+                .httpStatus(HttpStatus.OK)
+                .message("Business verification status verified successfully...")
+                .build();
     }
 
     @Override
@@ -111,4 +127,5 @@ public class UserServiceImpl implements UserService {
                 throw new FailedProcessException("Failed to upload profile picture: " + e.getMessage());
             }
         }
+
 }

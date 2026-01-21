@@ -12,6 +12,7 @@ public interface BusinessService {
     Business getBusinessOfUser(SnapUser user);
     SnapUser getUserOfBusiness(Business business);
     Business updateOnlineStatus(Business business, boolean online);
+    void updateBusinessVerificationStatus(SnapUser user);
     Business createBusiness( BusinessCreationDto dto);
     Business getBusiness(String code);
     Business withWallet(SnapUser user);

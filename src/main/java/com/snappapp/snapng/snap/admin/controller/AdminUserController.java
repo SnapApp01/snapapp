@@ -1,39 +1,59 @@
 package com.snappapp.snapng.snap.admin.controller;
 
-import com.snappapp.snapng.snap.admin.apimodels.UserApiResponse;
-import com.snappapp.snapng.snap.admin.config.MockData;
-import com.snappapp.snapng.snap.api_lib.exceptions.ApiResponseCode;
-import com.snappapp.snapng.snap.api_lib.exceptions.SnapApiException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
+import com.snappapp.snapng.dto.GenericResponse;
+import com.snappapp.snapng.dto.request.authDTOS.UserUpdateRequest;
+import com.snappapp.snapng.services.UserService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @RequestMapping("api/v1/admin/users")
 @RestController
 public class AdminUserController {
-    @Autowired
-    private MockData mockData;
+    private final UserService userService;
 
-    @GetMapping
-    public Page<UserApiResponse> getUsers(@RequestParam(value = "page",defaultValue = "0")Integer page,
-                                          @RequestParam(value = "size",defaultValue = "5")Integer size){
-        List<UserApiResponse> ls = new ArrayList<>();
-        mockData.getUserList().forEach((k,v)-> ls.add(v));
-        return new PageImpl<>(ls.subList(page,Math.min(size,ls.size())), PageRequest.of(page,size),mockData.getUserList().size());
+    public AdminUserController(UserService userService) {
+        this.userService = userService;
     }
 
-    @GetMapping("/{userId}")
-    public UserApiResponse getUser(@PathVariable("userId") String id) throws SnapApiException {
-        UserApiResponse rsp = mockData.getUserList().get(id);
-        if(rsp!=null){
-            return rsp;
-        }
-        throw new SnapApiException("User with userid not found", ApiResponseCode.ITEM_NOT_FOUND);
+
+    @GetMapping("/allUsers")
+//    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<GenericResponse> findAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        GenericResponse response = userService.getAllUsers(page, size);
+        return new ResponseEntity<>(response, response.getHttpStatus());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<GenericResponse> findById(@PathVariable Long id) {
+        GenericResponse response = userService.getUserById(id);
+        return new ResponseEntity<>(response, response.getHttpStatus());
+    }
+
+    @PutMapping("/businessStatus/{id}")
+    public ResponseEntity<GenericResponse> changeUserBusinessStatus(
+            @PathVariable Long id) {
+        GenericResponse response = userService.changeUserBusinessStatus(id);
+        return new ResponseEntity<>(response, response.getHttpStatus());
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<GenericResponse> updateUser(
+            @PathVariable Long id,
+            @RequestBody UserUpdateRequest userUpdateRequest
+    ) {
+        GenericResponse response = userService.updateUser(id, userUpdateRequest);
+        return new ResponseEntity<>(response, response.getHttpStatus());
+    }
+
+    @PutMapping("/disable/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<GenericResponse> disableUser(@PathVariable Long id) {
+        GenericResponse response = userService.toggleDisableUser(id);
+        return new ResponseEntity<>(response, response.getHttpStatus());
     }
 //
 //    @PutMapping("/status")
