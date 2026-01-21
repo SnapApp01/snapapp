@@ -10,6 +10,7 @@ import com.snappapp.snapng.snap.payment_util.paystack.GenericResponse;
 import com.snappapp.snapng.snap.payment_util.paystack.InitialPaymentResponse;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -20,7 +21,10 @@ import java.util.List;
 @Builder
 @Slf4j
 public class PaystackClient {
+    @Value("${paystack.base-url}")
     private String baseUrl;
+
+    @Value("${paystack.secret-key}")
     private String secretKey;
     private RestTemplate restTemplate;
 
