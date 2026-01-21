@@ -44,6 +44,12 @@ public class UserDetailController {
         return new ResponseEntity<>(response, response.getHttpStatus());
     }
 
+    @PostMapping("/becomePartner")
+    public ResponseEntity<GenericResponse> becomePartner(@RequestParam String businessName) {
+        GenericResponse response = snapUserService.becomePartner(businessName);
+        return new ResponseEntity<>(response, response.getHttpStatus());
+    }
+
 @PutMapping
 public UserDetailResponse update(
         @Valid @RequestBody UpdateUserDetailRequest request) {

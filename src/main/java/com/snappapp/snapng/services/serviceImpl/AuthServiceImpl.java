@@ -127,7 +127,6 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-
     @Override
     public GenericResponse refreshToken(RefreshTokenRequest request) {
         String requestRefreshToken = request.getRefreshToken();

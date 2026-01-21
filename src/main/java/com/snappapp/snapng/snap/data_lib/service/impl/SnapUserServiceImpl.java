@@ -16,6 +16,7 @@ import com.snappapp.snapng.snap.data_lib.repositories.SnapUserRepository;
 import com.snappapp.snapng.snap.data_lib.service.BusinessService;
 import com.snappapp.snapng.snap.data_lib.service.SnapUserService;
 import com.snappapp.snapng.snap.data_lib.service.WalletService;
+import com.snappapp.snapng.utills.SecurityUtil;
 import com.snappapp.snapng.utills.TimeBasedUserIdGenerator;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ import java.util.Set;
 public class SnapUserServiceImpl implements SnapUserService {
 
     private final SnapUserRepository repo;
+    private  final SecurityUtil securityUtil;
     private final WalletService walletService;
     private final VerificationCodeService verificationCodeService;
     private final RoleRepository roleRepository;
@@ -41,8 +43,9 @@ public class SnapUserServiceImpl implements SnapUserService {
     private final BusinessService businessService;
 
 
-    public SnapUserServiceImpl(SnapUserRepository repo, WalletService walletService, VerificationCodeService verificationCodeService, RoleRepository roleRepository, PasswordEncoder passwordEncoder, BusinessService businessService) {
+    public SnapUserServiceImpl(SnapUserRepository repo, SecurityUtil securityUtil, WalletService walletService, VerificationCodeService verificationCodeService, RoleRepository roleRepository, PasswordEncoder passwordEncoder, BusinessService businessService) {
         this.repo = repo;
+        this.securityUtil = securityUtil;
         this.walletService = walletService;
         this.verificationCodeService = verificationCodeService;
         this.roleRepository = roleRepository;
@@ -104,6 +107,31 @@ public class SnapUserServiceImpl implements SnapUserService {
         return GenericResponse.builder()
                 .isSuccess(true)
                 .message("Account created successfully... Check and verify your email")
+                .httpStatus(HttpStatus.CREATED)
+                .build();
+    }
+
+    @Transactional
+    @Override
+    public GenericResponse becomePartner(String businessName) {
+        Role role = roleRepository.findByRoleName("ROLE_DRIVER")
+                .orElseThrow(() ->
+                        new RoleNotFoundException("ROLE_DRIVER" + " not found in database"));
+        SnapUser user = securityUtil.getCurrentLoggedInUser();
+        if (businessName == null) {
+            throw new InvalidParameterException("Business name is empty");
+        }
+        Business business = businessService.createBusiness(
+                BusinessCreationDto.builder()
+                        .companyName(businessName)
+                        .build()
+        );
+        user.getBusinesses().add(business);
+        user.getRoles().add(role);
+        repo.save(user);
+        return GenericResponse.builder()
+                .isSuccess(true)
+                .message("You have successfully become a partner...")
                 .httpStatus(HttpStatus.CREATED)
                 .build();
     }
