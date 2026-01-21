@@ -33,7 +33,7 @@ public class AdminUserController {
         return new ResponseEntity<>(response, response.getHttpStatus());
     }
 
-    @PutMapping("/businessStatus/{id}")
+    @PutMapping("/toggleBusinessStatus/{id}")
     public ResponseEntity<GenericResponse> changeUserBusinessStatus(
             @PathVariable Long id) {
         GenericResponse response = userService.changeUserBusinessStatus(id);

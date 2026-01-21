@@ -60,7 +60,7 @@ public class BusinessServiceImpl implements BusinessService {
             throw new ResourceNotFoundException("Business not found for this user");
         }
         Business business1 = business.get();
-        business1.setIsVerified(true);
+        business1.setIsVerified(!business1.getIsVerified());
         repo.save(business1);
     }
 
