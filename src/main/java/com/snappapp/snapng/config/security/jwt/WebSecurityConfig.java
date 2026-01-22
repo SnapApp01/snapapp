@@ -37,7 +37,7 @@ public class WebSecurityConfig {
             "/api/v1/user-details/**",
             "/api/v1/payments/**",
             "/api/v1/users/**",
-            "/api/payments/callback",
+            "/api/v1/payments/callback",
             "/actuator/health/**",
             "/actuator/info",
             "/health",

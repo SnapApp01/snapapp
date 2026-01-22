@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
 
-@RequestMapping("/paystack/callback")
+@RequestMapping("/api/v1/payments/callback")
 @RestController
 @Slf4j
 public class PaystackCallbackController {
