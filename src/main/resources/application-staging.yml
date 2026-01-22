@@ -50,13 +50,19 @@ management:
   endpoints:
     web:
       exposure:
-        include: ${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE:health,info}
+        include: health,info
+
   endpoint:
     health:
-      show-details: ${MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS:always}
-      access: ${MANAGEMENT_ENDPOINT_HEALTH_ACCESS:unrestricted}
-    info:
-      access: ${MANAGEMENT_ENDPOINT_INFO_ACCESS:unrestricted}
+      show-details: never
+      probes:
+        enabled: true
+
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
 
 logging:
   level:
