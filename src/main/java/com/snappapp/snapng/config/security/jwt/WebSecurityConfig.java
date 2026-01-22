@@ -41,6 +41,8 @@ public class WebSecurityConfig {
             "/actuator/health/**",
             "/actuator/info",
             "/health",
+            "/error ",
+            "/robots.txt",
             "/",
             "/favicon.ico",
             "/v3/api-docs/**",
