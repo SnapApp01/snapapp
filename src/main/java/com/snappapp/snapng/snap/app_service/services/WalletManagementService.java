@@ -17,12 +17,21 @@ import com.snappapp.snapng.snap.utils.utilities.IdUtilities;
 import com.snappapp.snapng.snap.utils.utilities.InternalWalletUtilities;
 import com.snappapp.snapng.snap.utils.utilities.MoneyUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.HexFormat;
 
 @Service
 @Slf4j
 public class WalletManagementService {
+
+    @Value("${paystack.secret.key}")
+    private String paystackSecret;
 
     private final SnapUserService userService;
     private final BusinessService businessService;
@@ -158,5 +167,21 @@ public class WalletManagementService {
 
     public void reverse(String ref){
         transferService.performReversal(ref);
+    }
+
+    public boolean verifyPaystackSignature(String payload, String signature) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA512");
+            SecretKeySpec keySpec =
+                    new SecretKeySpec(paystackSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
+            mac.init(keySpec);
+
+            byte[] hash = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            String expected = HexFormat.of().formatHex(hash);
+
+            return expected.equals(signature);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
