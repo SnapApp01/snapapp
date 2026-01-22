@@ -1,5 +1,6 @@
 package com.snappapp.snapng.config.security.jwt;
 
+import com.google.cloud.storage.HttpMethod;
 import com.snappapp.snapng.config.security.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -83,6 +84,7 @@ public class WebSecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers("/api/v1/payments/callback").permitAll();
                     auth.requestMatchers(WHITELIST).permitAll()
                             .anyRequest().authenticated();
                 })
