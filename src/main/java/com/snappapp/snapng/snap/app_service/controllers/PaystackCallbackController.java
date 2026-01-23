@@ -26,41 +26,41 @@ public class PaystackCallbackController {
         this.priceManagementService = priceManagementService;
     }
 
-    @PostMapping
-    public ResponseEntity<Void> callback(
-            @RequestBody String payload,
-            @RequestHeader("x-paystack-signature") String signature
-    ) throws Exception {
-
-        // 1️⃣ Verify Paystack signature
-        if (!walletManagementService.verifyPaystackSignature(payload, signature)) {
-            log.warn("❌ Invalid Paystack signature");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        // 2️⃣ Parse payload AFTER verification
-        LinkedHashMap<String, Object> body =
-                objectMapper.readValue(payload, LinkedHashMap.class);
-
-        // 3️⃣ Process payment
-        walletManagementService.callback(
-                objectMapper.convertValue(
-                        body.get("data"),
-                        PaystackCallbackResponseData.class
-                )
-        );
-
-        log.info("✅ Paystack callback processed successfully");
-        return ResponseEntity.ok().build();
-    }
-
 //    @PostMapping
-//    public void callback(@RequestBody LinkedHashMap<String, Object> response){
-//        log.info(new Gson().toJson(response));
-//        String event = response.get("event").toString();
-//        log.info(event);
-//        walletManagementService.callback(new ObjectMapper().convertValue(response.get("data"), PaystackCallbackResponseData.class));
+//    public ResponseEntity<Void> callback(
+//            @RequestBody String payload,
+//            @RequestHeader("x-paystack-signature") String signature
+//    ) throws Exception {
+//
+//        // 1️⃣ Verify Paystack signature
+//        if (!walletManagementService.verifyPaystackSignature(payload, signature)) {
+//            log.warn("❌ Invalid Paystack signature");
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+//        }
+//
+//        // 2️⃣ Parse payload AFTER verification
+//        LinkedHashMap<String, Object> body =
+//                objectMapper.readValue(payload, LinkedHashMap.class);
+//
+//        // 3️⃣ Process payment
+//        walletManagementService.callback(
+//                objectMapper.convertValue(
+//                        body.get("data"),
+//                        PaystackCallbackResponseData.class
+//                )
+//        );
+//
+//        log.info("✅ Paystack callback processed successfully");
+//        return ResponseEntity.ok().build();
 //    }
+
+    @PostMapping
+    public void callback(@RequestBody LinkedHashMap<String, Object> response){
+        log.info("Received Paystack callback response: {}", new Gson().toJson(response));
+        String event = response.get("event").toString();
+        log.info(event);
+        walletManagementService.callback(new ObjectMapper().convertValue(response.get("data"), PaystackCallbackResponseData.class));
+    }
 
     @PutMapping("/reverse/{reference}")
     public void reverse(@PathVariable("reference") String reference){
