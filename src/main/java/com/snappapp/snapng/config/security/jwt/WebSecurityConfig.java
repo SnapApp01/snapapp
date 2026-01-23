@@ -38,7 +38,7 @@ public class WebSecurityConfig {
             "/api/v1/user-details/**",
             "/api/v1/payments/**",
             "/api/v1/users/**",
-            "/api/v1/payments/callback",
+            "/paystack/webhook",
             "/actuator/health/**",
             "/actuator/info",
             "/health",
@@ -84,7 +84,7 @@ public class WebSecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers("/api/v1/payments/callback").permitAll();
+                    auth.requestMatchers("/paystack/webhook").permitAll();
                     auth.requestMatchers(WHITELIST).permitAll()
                             .anyRequest().authenticated();
                 })

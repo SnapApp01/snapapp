@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
 
-@RequestMapping("/api/v1/payments/callback")
+@RequestMapping("/paystack/webhook")
 @RestController
 @Slf4j
 public class PaystackCallbackController {
