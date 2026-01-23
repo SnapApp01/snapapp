@@ -47,6 +47,11 @@ public class AuthController {
             return new ResponseEntity<>(response, response.getHttpStatus());
         }
 
+        @GetMapping("/test")
+        public String test() {
+            return "working fine...";
+        }
+
         @PostMapping("/refresh")
         public ResponseEntity<GenericResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
             GenericResponse response = authService.refreshToken(request);
