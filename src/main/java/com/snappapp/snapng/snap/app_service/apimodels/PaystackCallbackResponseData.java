@@ -8,6 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PaystackCallbackResponseData {
     private String reference;
     @JsonProperty("gateway_response")
