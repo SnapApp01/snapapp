@@ -16,6 +16,7 @@ import com.snappapp.snapng.snap.payment_util.services.PaystackService;
 import com.snappapp.snapng.snap.utils.utilities.IdUtilities;
 import com.snappapp.snapng.snap.utils.utilities.InternalWalletUtilities;
 import com.snappapp.snapng.snap.utils.utilities.MoneyUtilities;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 
@@ -105,6 +107,57 @@ public class WalletManagementService {
                 .url(initialPaymentResponse.getAuthorizationUrl())
                 .build();
     }
+
+    @Transactional
+    public void handlePaystackSuccess(PaystackCallbackResponseData data) {
+
+        String reference = data.getReference();
+
+        PaystackTransaction transaction =
+                paystackTransactionService.get(reference);
+
+        if (transaction.isCompleted()) {
+            log.warn("Duplicate Paystack webhook for {}", reference);
+            return;
+        }
+
+        boolean success =
+                "success".equalsIgnoreCase(data.getStatus())
+                        || "approved".equalsIgnoreCase(data.getGatewayResponse());
+
+        if (!success) {
+            return;
+        }
+
+        // 1️⃣ Update Paystack transaction (amount remains Long / kobo)
+        paystackTransactionService.update(
+                UpdatePaystackTransactionDto.builder()
+                        .reference(reference)
+                        .isSuccessful(true)
+                        .responseData(data)
+                        .build()
+        );
+
+        Wallet creditWallet =
+                walletService.get(transaction.getWalletId());
+
+        // 2️⃣ Perform wallet funding (external source)
+        transferService.performFullTransfer(
+                CreateWalletTransferDto.builder()
+                        .amount(data.getAmount()) // ✅ Long (kobo)
+                        .debitWalletKey(
+                                InternalWalletUtilities.WALLET_FUNDING_RECEIVABLE
+                        )
+                        .creditWalletKey(
+                                creditWallet.getWalletKey()
+                        )
+                        .reference(reference)
+                        .narration("Funded via Paystack | " + data.getChannel())
+                        .build()
+        );
+    }
+
+
 
     public void callback(PaystackCallbackResponseData data){
         String ref = data.getReference();

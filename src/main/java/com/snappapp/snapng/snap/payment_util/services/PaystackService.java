@@ -13,4 +13,6 @@ public interface PaystackService {
     InitialPaymentResponse initializePayment(InitializePaymentRequest request);
     AccountEnquiryResponse enquiryAccount(String accountNumber, String bankCode);
     List<BankResponse> getBanks();
+
+    boolean verifySignature(String payload, String signature);
 }

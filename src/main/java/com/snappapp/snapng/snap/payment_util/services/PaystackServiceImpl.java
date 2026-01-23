@@ -1,11 +1,14 @@
 package com.snappapp.snapng.snap.payment_util.services;
 
+import com.snappapp.snapng.snap.data_lib.dtos.CreateWalletTransferDto;
 import com.snappapp.snapng.snap.payment_util.clients.PaystackClient;
 import com.snappapp.snapng.snap.payment_util.paystack.AccountEnquiryResponse;
 import com.snappapp.snapng.snap.payment_util.paystack.BankResponse;
 import com.snappapp.snapng.snap.payment_util.paystack.InitialPaymentResponse;
 import com.snappapp.snapng.snap.payment_util.paystack.InitializePaymentRequest;
 import com.snappapp.snapng.snap.payment_util.services.PaystackService;
+import com.snappapp.snapng.snap.utils.utilities.InternalWalletUtilities;
+import com.snappapp.snapng.snap.utils.utilities.MoneyUtilities;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +16,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.HexFormat;
 import java.util.List;
 
 @Service
@@ -76,55 +84,31 @@ public class PaystackServiceImpl implements PaystackService {
             throw e;  // Re-throw or handle appropriately
         }
     }
+
+    @Override
+    public boolean verifySignature(String payload, String signature) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA512");
+            SecretKeySpec key =
+                    new SecretKeySpec(
+                            secretKey.getBytes(StandardCharsets.UTF_8),
+                            "HmacSHA512"
+                    );
+
+            mac.init(key);
+
+            byte[] hash =
+                    mac.doFinal(
+                            payload.getBytes(StandardCharsets.UTF_8)
+                    );
+
+            String calculated =
+                    HexFormat.of().formatHex(hash);
+
+            return calculated.equalsIgnoreCase(signature);
+        } catch (Exception e) {
+            log.warn("Failed to verify Paystack signature", e);
+            return false;
+        }
+    }
 }
-//package com.nimisitech.handypros.payment.services;
-//
-//import com.nimisitech.handypros.payment.apimodels.paystack.AccountEnquiryResponse;
-//import com.nimisitech.handypros.payment.apimodels.paystack.BankResponse;
-//import com.nimisitech.handypros.payment.apimodels.paystack.InitialPaymentResponse;
-//import com.nimisitech.handypros.payment.apimodels.paystack.InitializePaymentRequest;
-//import com.nimisitech.handypros.payment.clients.PaystackClient;
-//import jakarta.annotation.PostConstruct;
-//import lombok.extern.slf4j.Slf4j;
-//import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.http.HttpMethod;
-//import org.springframework.stereotype.Service;
-//import org.springframework.web.client.RestTemplate;
-//
-//import java.util.List;
-//
-//@Service
-//@Slf4j
-//public class PaystackServiceImpl implements PaystackService {
-//
-//    @Value("${paystack.base-url}")
-//    private String baseUrl;
-//
-//    @Value("${paystack.secret-key}")
-//    private String secretKey;
-//
-//    private PaystackClient client;
-//    @PostConstruct
-//    public void initSetup(){
-//        client = PaystackClient.builder()
-//                .baseUrl(baseUrl)
-//                .secretKey(secretKey)
-//                .restTemplate(new RestTemplate())
-//                .build();
-//    }
-//
-//    @Override
-//    public InitialPaymentResponse initializePayment(InitializePaymentRequest request) {
-//        return client.makeRequest(HttpMethod.POST,request,"/transaction/initialize", InitialPaymentResponse.class);
-//    }
-//
-//    @Override
-//    public AccountEnquiryResponse enquiryAccount(String accountNumber, String bankCode) {
-//        return client.makeRequest(HttpMethod.GET,null,String.format("/bank/resolve?account_number=%s&bank_code=%s",accountNumber,bankCode));
-//    }
-//
-//    @Override
-//    public List<BankResponse> getBanks() {
-//        return client.makeRequest();
-//    }
-//}
