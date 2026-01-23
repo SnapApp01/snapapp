@@ -30,7 +30,7 @@ import java.util.HexFormat;
 @Slf4j
 public class WalletManagementService {
 
-    @Value("${paystack.secret.key}")
+    @Value("${paystack.secret-key}")
     private String paystackSecret;
 
     private final SnapUserService userService;
