@@ -1,5 +1,6 @@
 package com.snappapp.snapng.snap.app_service.services;
 
+import com.snappapp.snapng.enums.WalletType;
 import com.snappapp.snapng.snap.app_service.apimodels.*;
 import com.snappapp.snapng.snap.data_lib.dtos.AddAppNotificationDto;
 import com.snappapp.snapng.snap.data_lib.dtos.CreatePaystackTransactionDto;
@@ -57,12 +58,28 @@ public class WalletManagementService {
         this.notificationService = notificationService;
     }
 
-    public Page<WalletTransactionResponse> getTransactions(Long uid, int page, int size){
+    @Transactional
+    public Page<WalletTransactionResponse> getTransactions(
+            Long uid,
+            WalletType walletType,
+            int page,
+            int size
+    ) {
         SnapUser user = userService.withWallet(uid);
-        Business business = businessService.getBusinessOfUser(user);
-        String walletKey =  business==null ? user.getWalletKey() : business.getWalletKey();
-        return walletTransactionService.getAll(walletKey, page,size).map(WalletTransactionResponse::new);
+
+        String walletKey = resolveWalletKey(user, walletType);
+
+        return walletTransactionService
+                .getAll(walletKey, page, size)
+                .map(WalletTransactionResponse::new);
     }
+
+//    public Page<WalletTransactionResponse> getTransactions(Long uid, int page, int size){
+//        SnapUser user = userService.withWallet(uid);
+//        Business business = businessService.getBusinessOfUser(user);
+//        String walletKey =  business==null ? user.getWalletKey() : business.getWalletKey();
+//        return walletTransactionService.getAll(walletKey, page,size).map(WalletTransactionResponse::new);
+//    }
 
     public void startRequestPayment(DeliveryRequest request){
         if(!DeliveryRequestStatus.AWAITING_PAYMENT.equals(request.getStatus())){
@@ -157,8 +174,6 @@ public class WalletManagementService {
         );
     }
 
-
-
     public void callback(PaystackCallbackResponseData data){
         String ref = data.getReference();
         PaystackTransaction transaction = paystackTransactionService.get(ref);
@@ -236,5 +251,21 @@ public class WalletManagementService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private String resolveWalletKey(SnapUser user, WalletType walletType) {
+
+        if (walletType == WalletType.SNAP_BUSINESS) {
+            Business business = businessService.getBusinessOfUser(user);
+
+            if (business == null) {
+                throw new IllegalStateException(
+                        "User does not have a business wallet"
+                );
+            }
+
+            return business.getWalletKey();
+        }
+        return user.getWalletKey();
     }
 }

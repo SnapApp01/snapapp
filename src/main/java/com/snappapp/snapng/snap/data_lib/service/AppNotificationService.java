@@ -1,6 +1,5 @@
 package com.snappapp.snapng.snap.data_lib.service;
 
-
 import com.snappapp.snapng.snap.data_lib.dtos.AddAppNotificationDto;
 import com.snappapp.snapng.snap.data_lib.entities.AppNotification;
 import org.springframework.stereotype.Component;
