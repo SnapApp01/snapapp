@@ -26,4 +26,6 @@ public interface SnapUserService {
     GenericResponse createBusinessUser(CreateUserDetailWithBusinessRequest request);
 
     GenericResponse becomePartner(String businessName);
+
+    SnapUser findById(Long userId);
 }

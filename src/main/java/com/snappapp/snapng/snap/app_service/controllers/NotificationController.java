@@ -13,11 +13,11 @@ import java.util.List;
 @RequestMapping("/api/v1/notifications")
 @Slf4j
 public class NotificationController {
-    private final AppNotificationService notificationService;
+    private final AppNotificationService appNotificationService;
     private final SecurityUtil securityUtil;
 
-    public NotificationController(AppNotificationService notificationService, SecurityUtil securityUtil) {
-        this.notificationService = notificationService;
+    public NotificationController(AppNotificationService appNotificationService, SecurityUtil securityUtil) {
+        this.appNotificationService = appNotificationService;
         this.securityUtil = securityUtil;
     }
 
@@ -34,13 +34,13 @@ public class NotificationController {
     @GetMapping
     public List<AppNotificationResponse> getNotifications(){
         SnapUser user = securityUtil.getCurrentLoggedInUser();
-        return notificationService.get(user.getId()).stream().map(AppNotificationResponse::new).toList();
+        return appNotificationService.get(user.getId()).stream().map(AppNotificationResponse::new).toList();
     }
 
     @PutMapping("/read/{ref}")
     public void read(@PathVariable("ref")String ref){
         try{
-            notificationService.update(ref);
+            appNotificationService.update(ref);
         }
         catch (Exception e){
             log.info(e.getMessage());

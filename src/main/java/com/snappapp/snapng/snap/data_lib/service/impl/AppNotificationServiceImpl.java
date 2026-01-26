@@ -2,10 +2,11 @@ package com.snappapp.snapng.snap.data_lib.service.impl;
 
 import com.snappapp.snapng.snap.data_lib.dtos.AddAppNotificationDto;
 import com.snappapp.snapng.snap.data_lib.entities.AppNotification;
+import com.snappapp.snapng.snap.data_lib.entities.SnapUser;
 import com.snappapp.snapng.snap.data_lib.repositories.AppNotificationRepository;
 import com.snappapp.snapng.snap.data_lib.service.AppNotificationService;
+import com.snappapp.snapng.snap.data_lib.service.SnapUserService;
 import com.snappapp.snapng.snap.utils.utilities.IdUtilities;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -19,14 +20,28 @@ import java.util.List;
 public class AppNotificationServiceImpl implements AppNotificationService {
 
     private final AppNotificationRepository repo;
+    private final SnapUserService userService;
 
-    public AppNotificationServiceImpl(AppNotificationRepository repo) {
+    public AppNotificationServiceImpl(AppNotificationRepository repo, SnapUserService userService) {
         this.repo = repo;
+        this.userService = userService;
     }
 
+//    @Override
+//    public List<AppNotification> get(Long id) {
+//        return repo.findByIdAndArchivedFalse(id, PageRequest.of(0,20, Sort.Direction.DESC,"id")).getContent();
+//    }
+
     @Override
-    public List<AppNotification> get(Long id) {
-        return repo.findByIdAndArchivedFalse(id, PageRequest.of(0,20, Sort.Direction.DESC,"id")).getContent();
+    public List<AppNotification> get(Long userId) {
+        SnapUser user = userService.findById(userId);
+
+        return repo
+                .findByUidAndArchivedFalse(
+                        user.getIdentifier(),
+                        PageRequest.of(0, 20, Sort.Direction.DESC, "createdAt")
+                )
+                .getContent();
     }
 
     @Override

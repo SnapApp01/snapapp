@@ -137,6 +137,11 @@ public class SnapUserServiceImpl implements SnapUserService {
     }
 
     @Override
+    public SnapUser findById(Long userId) {
+        return repo.findById(userId).orElseThrow(()->new UserNotFoundException("User not found"));
+    }
+
+    @Override
     public SnapUser updateUser(SnapUser user) {
         return repo.save(user);
     }
