@@ -20,6 +20,7 @@ public class AppNotification extends BaseEntity {
     private String message;
     private String uid;
     private Boolean archived = false;
+    private Boolean read = false;
     private String taskId;
     private String task;
     private String topic;

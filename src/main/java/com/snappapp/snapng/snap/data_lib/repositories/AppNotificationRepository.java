@@ -20,7 +20,7 @@ import java.util.Optional;
 public interface AppNotificationRepository extends JpaRepository<AppNotification, Long> {
     Page<AppNotification> findByUidAndArchivedFalse(String uid, Pageable pageable);
     Optional<AppNotification> findFirstByUidAndArchivedFalseOrderByIdDesc(String uid);
-    @Query("UPDATE AppNotification n SET n.archived = true WHERE n.reference = :ref")
+    @Query("UPDATE AppNotification n SET n.read = true WHERE n.reference = :ref")
     @Modifying
     @Transactional
     void updateNotificationToRead(@Param("ref")String ref);
