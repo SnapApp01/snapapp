@@ -82,4 +82,12 @@ public class DeliveryPriceProposalServiceImpl implements DeliveryPriceProposalSe
     public List<DeliveryPriceProposal> getProposals(DeliveryRequest request) {
         return repo.findByRequestAndActiveTrueAndStatusAndBusinessInitiatedTrueOrderByFeeAsc(request,FeeProposalStatus.PENDING);
     }
+
+    @Override
+    public void updateCounterProposal(String proposalId, long counterProposal) {
+        DeliveryPriceProposal proposal = repo.findByProposalIdAndActiveTrue(proposalId)
+                .orElseThrow(()->new ResourceNotFoundException("Proposal not found"));
+        proposal.setCounterProposal(counterProposal);
+        repo.save(proposal);
+    }
 }

@@ -55,4 +55,7 @@ public class DeliveryPriceProposalResponse {
     public String getPlate(){
         return proposal.getVehicle().getPlateNumber();
     }
+
+    @JsonProperty("counterProposal")
+    public long getCounterProposal(){ return proposal.getCounterProposal();}
 }

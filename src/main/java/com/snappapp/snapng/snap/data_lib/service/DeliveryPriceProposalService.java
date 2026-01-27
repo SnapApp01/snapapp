@@ -12,4 +12,6 @@ public interface DeliveryPriceProposalService {
     DeliveryPriceProposal getProposal(DeliveryRequest request, Business business);
     DeliveryPriceProposal updateProposal(String proposalId, boolean accepted);
     List<DeliveryPriceProposal> getProposals(DeliveryRequest request);
+
+    void updateCounterProposal(String proposalId, long counterProposal);
 }

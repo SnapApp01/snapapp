@@ -25,4 +25,5 @@ public class DeliveryPriceProposal extends BaseEntity {
     private FeeProposalStatus status;
     private Boolean businessInitiated;
     private String businessUserId;
+    private long counterProposal;
 }

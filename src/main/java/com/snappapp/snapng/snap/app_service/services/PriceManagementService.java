@@ -129,6 +129,7 @@ public class PriceManagementService {
                     .build());
         }
         else{
+            proposalService.updateCounterProposal(request.getProposalId(), request.getCounterProposal());
             notificationService.send(AddAppNotificationDto.builder()
                     .message("Your bid was not accepted, please submit another bid." + "Client proposes this amount " + request.getCounterProposal())
                     .title(NotificationTitle.DELIVERY)
