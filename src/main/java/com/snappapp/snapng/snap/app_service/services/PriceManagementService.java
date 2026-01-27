@@ -130,7 +130,7 @@ public class PriceManagementService {
         }
         else{
             notificationService.send(AddAppNotificationDto.builder()
-                    .message("Your bid was not accepted, please submit another bid.")
+                    .message("Your bid was not accepted, please submit another bid." + "Client proposes this amount " + request.getCounterProposal())
                     .title(NotificationTitle.DELIVERY)
                     .uid(proposal.getBusinessUserId())
                             .task(NotificationTask.RIDER_DELIVERY_PROPOSAL.name())
