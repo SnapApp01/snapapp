@@ -10,5 +10,5 @@ import lombok.*;
 public class UpdatePriceProposalRequest {
     private String proposalId;
     private boolean accept;
-    private long counterProposal;
+    private Long counterProposal;
 }

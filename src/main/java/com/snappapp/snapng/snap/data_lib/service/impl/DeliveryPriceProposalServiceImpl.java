@@ -53,8 +53,6 @@ public class DeliveryPriceProposalServiceImpl implements DeliveryPriceProposalSe
         return repo.save(proposal);
     }
 
-
-
     @Override
     public List<DeliveryPriceProposal> getProposals(Vehicle vehicle) {
         return repo.findByVehicleAndActiveTrueAndStatusAndBusinessInitiatedFalse(vehicle,FeeProposalStatus.PENDING);

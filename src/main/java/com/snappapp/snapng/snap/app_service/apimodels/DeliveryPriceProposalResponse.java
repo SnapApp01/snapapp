@@ -57,5 +57,5 @@ public class DeliveryPriceProposalResponse {
     }
 
     @JsonProperty("counterProposal")
-    public long getCounterProposal(){ return proposal.getCounterProposal();}
+    public Long getCounterProposal(){ return proposal.getCounterProposal();}
 }
