@@ -65,7 +65,7 @@ public class DeliveryPriceProposalServiceImpl implements DeliveryPriceProposalSe
 
     @Override
     public DeliveryPriceProposal getProposal(DeliveryRequest request, Business business) {
-        return repo.findByDeliveryRequestAndBusiness(request, business).orElseThrow(()->new ResourceNotFoundException("Proposal id not found for business"));
+        return repo.findByRequestAndVehicle_BusinessAndActiveTrue(request, business).orElseThrow(()->new ResourceNotFoundException("Proposal id not found for business"));
     }
 
     @Override
