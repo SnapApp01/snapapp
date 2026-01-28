@@ -9,16 +9,40 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface DeliveryPriceProposalRepository extends JpaRepository<DeliveryPriceProposal,Long> {
-    Optional<DeliveryPriceProposal> findByDeliveryRequestAndBusiness(
+public interface DeliveryPriceProposalRepository
+        extends JpaRepository<DeliveryPriceProposal, Long> {
+
+    Optional<DeliveryPriceProposal> findByProposalIdAndActiveTrue(String proposalId);
+
+    Optional<DeliveryPriceProposal> findByProposalIdAndRequest_UserAndActiveTrue(
+            String proposalId,
+            SnapUser user
+    );
+
+    Optional<DeliveryPriceProposal> findByProposalIdAndVehicle_BusinessAndActiveTrue(
+            String proposalId,
+            Business business
+    );
+
+    Optional<DeliveryPriceProposal> findByRequestAndVehicle_BusinessAndActiveTrue(
             DeliveryRequest request,
             Business business
     );
-    Optional<DeliveryPriceProposal> findByProposalIdAndActiveTrue(String proposalId);
-    Optional<DeliveryPriceProposal> findByProposalIdAndRequest_UserAndActiveTrue(String proposalId, SnapUser user);
-    Optional<DeliveryPriceProposal> findByProposalIdAndVehicle_BusinessAndActiveTrue(String proposalId, Business business);
-    Optional<DeliveryPriceProposal> findByRequestAndVehicle_BusinessAndActiveTrue(DeliveryRequest request, Business business);
-    Optional<DeliveryPriceProposal> findByVehicleAndRequestAndStatusAndActiveTrue(Vehicle vehicle, DeliveryRequest request, FeeProposalStatus status);
-    List<DeliveryPriceProposal> findByVehicleAndActiveTrueAndStatusAndBusinessInitiatedFalse(Vehicle vehicle, FeeProposalStatus status);
-    List<DeliveryPriceProposal> findByRequestAndActiveTrueAndStatusAndBusinessInitiatedTrueOrderByFeeAsc(DeliveryRequest request,FeeProposalStatus status);
+
+    Optional<DeliveryPriceProposal> findByVehicleAndRequestAndStatusAndActiveTrue(
+            Vehicle vehicle,
+            DeliveryRequest request,
+            FeeProposalStatus status
+    );
+
+    List<DeliveryPriceProposal> findByVehicleAndActiveTrueAndStatusAndBusinessInitiatedFalse(
+            Vehicle vehicle,
+            FeeProposalStatus status
+    );
+
+    List<DeliveryPriceProposal> findByRequestAndActiveTrueAndStatusAndBusinessInitiatedTrueOrderByFeeAsc(
+            DeliveryRequest request,
+            FeeProposalStatus status
+    );
 }
+
