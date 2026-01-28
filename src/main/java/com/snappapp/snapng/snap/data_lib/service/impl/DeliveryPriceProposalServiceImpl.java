@@ -1,10 +1,14 @@
 package com.snappapp.snapng.snap.data_lib.service.impl;
 
 import com.snappapp.snapng.exceptions.ResourceNotFoundException;
+import com.snappapp.snapng.snap.data_lib.dtos.AddAppNotificationDto;
 import com.snappapp.snapng.snap.data_lib.dtos.PriceProposalCreationDto;
 import com.snappapp.snapng.snap.data_lib.entities.*;
 import com.snappapp.snapng.snap.data_lib.enums.FeeProposalStatus;
+import com.snappapp.snapng.snap.data_lib.enums.NotificationTask;
+import com.snappapp.snapng.snap.data_lib.enums.NotificationTitle;
 import com.snappapp.snapng.snap.data_lib.repositories.DeliveryPriceProposalRepository;
+import com.snappapp.snapng.snap.data_lib.service.AppNotificationService;
 import com.snappapp.snapng.snap.data_lib.service.DeliveryPriceProposalService;
 import com.snappapp.snapng.snap.utils.utilities.IdUtilities;
 import lombok.AllArgsConstructor;
@@ -19,9 +23,11 @@ import java.util.Optional;
 public class DeliveryPriceProposalServiceImpl implements DeliveryPriceProposalService {
 
     private final DeliveryPriceProposalRepository repo;
+    private final AppNotificationService appNotificationService;
 
-    public DeliveryPriceProposalServiceImpl(DeliveryPriceProposalRepository repo) {
+    public DeliveryPriceProposalServiceImpl(DeliveryPriceProposalRepository repo, AppNotificationService appNotificationService) {
         this.repo = repo;
+        this.appNotificationService = appNotificationService;
     }
 
     @Override
@@ -67,14 +73,40 @@ public class DeliveryPriceProposalServiceImpl implements DeliveryPriceProposalSe
     public DeliveryPriceProposal getProposal(DeliveryRequest request, Business business) {
         return repo.findByRequestAndVehicle_BusinessAndActiveTrue(request, business).orElseThrow(()->new ResourceNotFoundException("Proposal id not found for business"));
     }
-
     @Override
     public DeliveryPriceProposal updateProposal(String proposalId, boolean accepted) {
         DeliveryPriceProposal proposal = repo.findByProposalIdAndActiveTrue(proposalId)
-                .orElseThrow(()->new ResourceNotFoundException("Proposal not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Proposal not found"));
+
         proposal.setStatus(accepted ? FeeProposalStatus.ACCEPTED : FeeProposalStatus.REJECTED);
-        return repo.save(proposal);
+
+        DeliveryPriceProposal saved = repo.save(proposal);
+
+        if (!accepted) {
+            appNotificationService.save(
+                    AddAppNotificationDto.builder()
+                            .message(
+                                    "Your bid was not accepted, please submit another bid. " +
+                                            "Client proposes this amount " + proposal.getCounterProposal()
+                            )
+                            .title(NotificationTitle.DELIVERY)
+                            .uid(proposal.getBusinessUserId())
+                            .task(NotificationTask.RIDER_DELIVERY_PROPOSAL.name())
+                            .taskId(proposal.getRequest().getTrackingId())
+                            .build()
+            );
+        }
+
+        return saved;
     }
+
+//    @Override
+//    public DeliveryPriceProposal updateProposal(String proposalId, boolean accepted) {
+//        DeliveryPriceProposal proposal = repo.findByProposalIdAndActiveTrue(proposalId)
+//                .orElseThrow(()->new ResourceNotFoundException("Proposal not found"));
+//        proposal.setStatus(accepted ? FeeProposalStatus.ACCEPTED : FeeProposalStatus.REJECTED);
+//        return repo.save(proposal);
+//    }
 
     @Override
     public List<DeliveryPriceProposal> getProposals(DeliveryRequest request) {
