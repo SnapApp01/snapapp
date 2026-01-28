@@ -10,6 +10,10 @@ import java.util.Optional;
 
 @Repository
 public interface DeliveryPriceProposalRepository extends JpaRepository<DeliveryPriceProposal,Long> {
+    Optional<DeliveryPriceProposal> findByDeliveryRequestAndBusiness(
+            DeliveryRequest request,
+            Business business
+    );
     Optional<DeliveryPriceProposal> findByProposalIdAndActiveTrue(String proposalId);
     Optional<DeliveryPriceProposal> findByProposalIdAndRequest_UserAndActiveTrue(String proposalId, SnapUser user);
     Optional<DeliveryPriceProposal> findByProposalIdAndVehicle_BusinessAndActiveTrue(String proposalId, Business business);

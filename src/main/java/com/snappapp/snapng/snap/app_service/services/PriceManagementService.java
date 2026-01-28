@@ -56,16 +56,43 @@ public class PriceManagementService {
         return responses;
     }
 
-    public DeliveryPriceProposalResponse getPriceProposalByBusiness(String trackingId, Long userId){
+    public DeliveryPriceProposalResponse getPriceProposalByBusiness(String trackingId, Long userId) {
+
         SnapUser user = userService.getUserById(userId);
+
         Business business = businessService.getBusinessOfUser(user);
-        if(business==null){
-            throw new ResourceNotFoundException("There is no business owned to this user");
+        if (business == null) {
+            throw new ResourceNotFoundException("There is no business owned by this user");
         }
+
         DeliveryRequest request = deliveryRequestService.get(trackingId);
-        DeliveryPriceProposal proposal = proposalService.getProposal(request,business);
+        if (request == null) {
+            throw new ResourceNotFoundException("Delivery request not found");
+        }
+
+        DeliveryPriceProposal proposal =
+                proposalService.getProposal(request, business);
+
+        if (proposal == null) {
+            throw new ResourceNotFoundException(
+                    "No price proposal found for this business"
+            );
+        }
+
         return new DeliveryPriceProposalResponse(proposal);
     }
+
+
+//    public DeliveryPriceProposalResponse getPriceProposalByBusiness(String trackingId, Long userId){
+//        SnapUser user = userService.getUserById(userId);
+//        Business business = businessService.getBusinessOfUser(user);
+//        if(business==null){
+//            throw new ResourceNotFoundException("There is no business owned to this user");
+//        }
+//        DeliveryRequest request = deliveryRequestService.get(trackingId);
+//        DeliveryPriceProposal proposal = proposalService.getProposal(request,business);
+//        return new DeliveryPriceProposalResponse(proposal);
+//    }
 
     public DeliveryPriceProposalResponse addPriceProposal(Long userId, CreatePriceProposalRequest request){
         SnapUser user = userService.getUserById(userId);
