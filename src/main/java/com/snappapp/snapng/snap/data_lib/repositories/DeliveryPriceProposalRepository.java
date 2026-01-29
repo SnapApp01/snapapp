@@ -44,5 +44,14 @@ public interface DeliveryPriceProposalRepository
             DeliveryRequest request,
             FeeProposalStatus status
     );
+
+    List<DeliveryPriceProposal> findByRequest(DeliveryRequest request);
+
+    // Optional: get proposals by request and status
+    List<DeliveryPriceProposal> findByRequestAndStatus(DeliveryRequest request, FeeProposalStatus status);
+
+    // Optional: get a single proposal by request, e.g., latest created
+    Optional<DeliveryPriceProposal> findTopByRequestOrderByCreatedAtDesc(DeliveryRequest request);
+
 }
 

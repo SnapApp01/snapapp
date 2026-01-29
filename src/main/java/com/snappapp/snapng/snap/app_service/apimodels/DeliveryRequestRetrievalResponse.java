@@ -24,7 +24,6 @@ public class DeliveryRequestRetrievalResponse {
     @JsonIgnore
     private LocalDateTime expiryTimeForPayment;
 
-    @JsonIgnore
     private String proposalId;
 
     @JsonProperty("trackId")
