@@ -56,24 +56,28 @@ public class AppNotificationServiceImpl implements AppNotificationService {
 
         String uid;
 
-        if (ownerType == NotificationOwnerType.BUSINESS) {
+        if (ownerType == NotificationOwnerType.SNAP_BUSINESS) {
             Business business = businessService.getBusinessOfUser(user);
 
             if (business == null) {
                 return List.of(); // user has no business
             }
 
-            uid = business.getIdentifier(); // IMPORTANT
+            uid = business.getIdentifier();
         } else {
             uid = user.getIdentifier();
         }
 
-        return repo
-                .findByUidAndArchivedFalse(
-                        uid,
-                        PageRequest.of(0, 20, Sort.Direction.DESC, "createdAt")
-                )
-                .getContent();
+        if (uid == null) {
+            throw new IllegalStateException(
+                    "Notification owner has no identifier: " + ownerType
+            );
+        }
+
+        return repo.findByUidAndReadFalse(
+                uid,
+                PageRequest.of(0, 20, Sort.Direction.DESC, "createdAt")
+        ).getContent();
     }
 
 

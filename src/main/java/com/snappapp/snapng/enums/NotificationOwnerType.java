@@ -2,5 +2,5 @@ package com.snappapp.snapng.enums;
 
 public enum NotificationOwnerType {
     SNAP_USER,
-    BUSINESS
+    SNAP_BUSINESS
 }

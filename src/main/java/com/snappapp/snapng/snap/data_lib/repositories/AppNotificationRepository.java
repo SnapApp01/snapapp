@@ -1,5 +1,6 @@
 package com.snappapp.snapng.snap.data_lib.repositories;
 
+import com.google.api.client.googleapis.notifications.TypedNotification;
 import com.snappapp.snapng.snap.data_lib.entities.AppNotification;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
@@ -32,4 +33,9 @@ public interface AppNotificationRepository extends JpaRepository<AppNotification
     int updateSentNotifications(LocalDateTime sentAt, List<Long> ids);
 
     Page<AppNotification> findByIdAndArchivedFalse(Long id, Pageable pageable);
+
+    Page<AppNotification> findByUidAndReadFalse(
+            String uid,
+            Pageable pageable
+    );
 }
