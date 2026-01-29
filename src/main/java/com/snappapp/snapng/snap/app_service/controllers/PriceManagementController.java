@@ -9,6 +9,7 @@ import com.snappapp.snapng.utills.SecurityUtil;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RequestMapping("/api/v1/price-proposal")
@@ -50,5 +51,22 @@ public class PriceManagementController {
         DeliveryPriceProposalResponse response = service.updateProposal(user.getId(), request);
         service.sendNotificationToOtherProposals(request, user.getId());
         return response;
+    }
+
+    @PostMapping("/proposals/{proposalId}/accept")
+    public DeliveryPriceProposalResponse acceptProposal(
+            @PathVariable String proposalId,
+            @RequestParam Long userId
+    ) {
+        return service.acceptProposal(userId, proposalId);
+    }
+
+    @PostMapping("/proposals/{proposalId}/reject")
+    public DeliveryPriceProposalResponse rejectProposal(
+            @PathVariable String proposalId,
+            @RequestParam Long userId,
+            @RequestParam Long counterProposal
+    ) {
+        return service.rejectProposal(userId, proposalId, counterProposal);
     }
 }

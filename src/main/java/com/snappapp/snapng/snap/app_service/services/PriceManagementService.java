@@ -1,6 +1,7 @@
 package com.snappapp.snapng.snap.app_service.services;
 
 import com.snappapp.snapng.exceptions.FailedProcessException;
+import com.snappapp.snapng.exceptions.InsufficientBalanceException;
 import com.snappapp.snapng.exceptions.ResourceNotFoundException;
 import com.snappapp.snapng.snap.app_service.apimodels.CreatePriceProposalRequest;
 import com.snappapp.snapng.snap.app_service.apimodels.DeliveryPriceProposalResponse;
@@ -13,10 +14,12 @@ import com.snappapp.snapng.snap.data_lib.enums.NotificationTask;
 import com.snappapp.snapng.snap.data_lib.enums.NotificationTitle;
 import com.snappapp.snapng.snap.data_lib.service.*;
 import com.snappapp.snapng.snap.utils.utilities.MoneyUtilities;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -190,4 +193,85 @@ public class PriceManagementService {
         DeliveryRequest request = deliveryRequestService.get(trackId);
         walletManagementService.startRequestPayment(request);
     }
+
+    @Transactional
+    public DeliveryPriceProposalResponse acceptProposal(Long userId, String proposalId) {
+
+        SnapUser user = userService.getUserById(userId);
+        DeliveryPriceProposal proposal =
+                proposalService.getProposal(proposalId, user);
+
+        // 1️⃣ Check vehicle availability
+        if (deliveryRequestService.vehicleActiveRequest(proposal.getVehicle())) {
+            throw new FailedProcessException(
+                    "Sorry, the vehicle is no longer available for your request"
+            );
+        }
+
+        DeliveryRequest request = proposal.getRequest();
+
+        // 2️⃣ 🔥 CHECK WALLET BALANCE FIRST (NO DEBIT)
+        if (user.getBalance().compareTo(proposal.getFee()) < 0) {
+            throw new InsufficientBalanceException("Insufficient wallet balance");
+        }
+
+        // 3️⃣ Accept proposal
+        proposalService.updateProposal(proposalId, true);
+
+        // 4️⃣ Assign rider ONLY after wallet check
+        DeliveryRequest deliveryRequest =
+                deliveryRequestService.assignToVehicleWithProposal(proposal);
+
+        // 5️⃣ Create pending payment
+        pendingPaymentService.create(deliveryRequest);
+
+        // 6️⃣ Take payment
+        walletManagementService.startRequestPayment(deliveryRequest);
+
+        pendingPaymentService.markPaid(deliveryRequest);
+
+        // 7️⃣ Notify
+        notificationService.send(AddAppNotificationDto.builder()
+                .message("Your bid has just been accepted and payment completed")
+                .title(NotificationTitle.DELIVERY)
+                .uid(deliveryRequest.getBusinessUserId())
+                .task(NotificationTask.RIDER_DELIVERY.name())
+                .taskId(deliveryRequest.getTrackingId())
+                .build());
+
+        return new DeliveryPriceProposalResponse(proposal);
+    }
+
+    @Transactional
+    public DeliveryPriceProposalResponse rejectProposal(
+            Long userId,
+            String proposalId,
+            Long counterProposal
+    ) {
+
+        SnapUser user = userService.getUserById(userId);
+        DeliveryPriceProposal proposal =
+                proposalService.getProposal(proposalId, user);
+
+        // Reject proposal
+        proposalService.updateProposal(proposalId, false);
+
+        // Set counter proposal
+        proposalService.updateCounterProposal(proposalId, counterProposal);
+
+        // Notify rider
+        notificationService.send(AddAppNotificationDto.builder()
+                .message(
+                        "Your bid was not accepted. Client proposes this amount " +
+                                counterProposal
+                )
+                .title(NotificationTitle.DELIVERY)
+                .uid(proposal.getBusinessUserId())
+                .task(NotificationTask.RIDER_DELIVERY_PROPOSAL.name())
+                .taskId(proposal.getRequest().getTrackingId())
+                .build());
+
+        return new DeliveryPriceProposalResponse(proposal);
+    }
+
 }

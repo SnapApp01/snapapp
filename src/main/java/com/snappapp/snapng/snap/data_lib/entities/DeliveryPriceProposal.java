@@ -15,7 +15,7 @@ public class DeliveryPriceProposal extends BaseEntity {
     @JoinColumn(name = "vehicle_id",referencedColumnName = "id")
     private Vehicle vehicle;
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "request_id",referencedColumnName = "id")
+    @JoinColumn(name = "request_id", referencedColumnName = "id")
     private DeliveryRequest request;
     @Column(unique = true)
     private String proposalId;

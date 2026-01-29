@@ -3,6 +3,7 @@ package com.snappapp.snapng.snap.app_service.services;
 import com.google.api.client.util.Strings;
 import com.snappapp.snapng.exceptions.FailedProcessException;
 import com.snappapp.snapng.exceptions.ResourceNotFoundException;
+import com.snappapp.snapng.models.baseclass.BaseEntity;
 import com.snappapp.snapng.snap.app_service.apimodels.CalculateMinimumCostResponse;
 import com.snappapp.snapng.snap.app_service.apimodels.CreateDeliveryRequest;
 import com.snappapp.snapng.snap.app_service.apimodels.DeliveryRequestCreationResponse;
@@ -13,10 +14,7 @@ import com.snappapp.snapng.snap.data_lib.dtos.AddAppNotificationDto;
 import com.snappapp.snapng.snap.data_lib.dtos.LocationCreationDto;
 import com.snappapp.snapng.snap.data_lib.dtos.RequestCreationDto;
 import com.snappapp.snapng.snap.data_lib.entities.*;
-import com.snappapp.snapng.snap.data_lib.enums.DeliveryRequestStatus;
-import com.snappapp.snapng.snap.data_lib.enums.NotificationTask;
-import com.snappapp.snapng.snap.data_lib.enums.NotificationTitle;
-import com.snappapp.snapng.snap.data_lib.enums.VehicleType;
+import com.snappapp.snapng.snap.data_lib.enums.*;
 import com.snappapp.snapng.snap.data_lib.service.*;
 import com.snappapp.snapng.snap.utils.utilities.DateTimeUtils;
 import com.snappapp.snapng.snap.utils.utilities.GeoUtilities;
@@ -25,10 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -198,17 +193,72 @@ public class DeliveryRequestManagementService {
         return responses;
     }
 
-    public DeliveryRequestRetrievalResponse getUserRequest(Long userId, String trackingId){
+    public DeliveryRequestRetrievalResponse getUserRequest(Long userId, String trackingId) {
+        // 1️⃣ Fetch user
         SnapUser user = userService.getUserById(userId);
-        DeliveryRequest request = deliveryRequestService.get(trackingId,user);
-        DeliveryRequestPendingPayment pendingPayment = pendingPaymentService.get(request);
-        if(pendingPayment!=null){
-            return DeliveryRequestRetrievalResponse.builder()
-                    .expiryTimeForPayment(pendingPayment.getExpiryTime())
-                    .request(request).build();
+
+        // 2️⃣ Fetch delivery request (ensures user owns it)
+        DeliveryRequest request = deliveryRequestService.get(trackingId, user);
+
+        // 3️⃣ Determine proposalId
+        String proposalId = null;
+
+        if (request.getProposals() != null && !request.getProposals().isEmpty()) {
+
+            // Try to get the accepted proposal first
+            Optional<DeliveryPriceProposal> acceptedProposalOpt = request.getProposals().stream()
+                    .filter(p -> FeeProposalStatus.ACCEPTED.equals(p.getStatus()))
+                    .findFirst();
+
+            if (acceptedProposalOpt.isPresent()) {
+                proposalId = acceptedProposalOpt.get().getProposalId();
+            } else {
+                // Fallback: get the latest proposal based on creation time
+                proposalId = request.getProposals().stream()
+                        .max(Comparator.comparing(BaseEntity::getCreatedAt)) // assuming BaseEntity has createdAt
+                        .map(DeliveryPriceProposal::getProposalId)
+                        .orElse(null);
+            }
         }
-        return DeliveryRequestRetrievalResponse.builder().request(request).build();
+
+        // 4️⃣ Get pending payment info
+        DeliveryRequestPendingPayment pendingPayment = pendingPaymentService.get(request);
+
+        // 5️⃣ Build and return response
+        DeliveryRequestRetrievalResponse.DeliveryRequestRetrievalResponseBuilder builder =
+                DeliveryRequestRetrievalResponse.builder()
+                        .request(request)
+                        .proposalId(proposalId);
+
+        if (pendingPayment != null) {
+            builder.expiryTimeForPayment(pendingPayment.getExpiryTime());
+        }
+
+        return builder.build();
     }
+
+
+//    public DeliveryRequestRetrievalResponse getUserRequest(Long userId, String trackingId){
+//        SnapUser user = userService.getUserById(userId);
+//        DeliveryRequest request = deliveryRequestService.get(trackingId,user);
+//        DeliveryRequestPendingPayment pendingPayment = pendingPaymentService.get(request);
+//        if(pendingPayment!=null){
+//            return DeliveryRequestRetrievalResponse.builder()
+//                    .expiryTimeForPayment(pendingPayment.getExpiryTime())
+//                    .request(request).build();
+//        }
+//        // get accepted proposal directly
+//        DeliveryPriceProposal acceptedProposal = request.getProposals().stream()
+//                .filter(p -> p.getStatus() == FeeProposalStatus.ACCEPTED)
+//                .findFirst()
+//                .orElse(request.getProposals().stream()
+//                        .max(Comparator.comparing(BaseEntity::getCreatedAt))
+//                        .orElse(null));
+//
+//        String proposalId = acceptedProposal != null ? acceptedProposal.getProposalId() : null;
+//
+//        return DeliveryRequestRetrievalResponse.builder().request(request).proposalId(proposalId).build();
+//    }
 
     public DeliveryRequestRetrievalResponse completeDelivery(Long userId, String trackingId){
         SnapUser user = userService.getUserById(userId);

@@ -49,6 +49,19 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(value = InsufficientBalanceException.class)
+    public ResponseEntity<GenericResponse> InsufficientBalanceExceptionHandler(InsufficientBalanceException exception) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(
+                        GenericResponse.builder()
+                                .isSuccess(false)
+                                .message(exception.getMessage())
+                                .httpStatus(HttpStatus.BAD_REQUEST)
+                                .build()
+                );
+    }
+
 
     @ExceptionHandler(value = DeliveryAlreadyAssignedException.class)
     public ResponseEntity<GenericResponse> DeliveryAlreadyAssignedExceptionHandler(DeliveryAlreadyAssignedException exception) {

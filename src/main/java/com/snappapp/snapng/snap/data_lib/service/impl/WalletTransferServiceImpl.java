@@ -114,8 +114,6 @@ public class WalletTransferServiceImpl implements WalletTransferService {
         return repo.save(transfer);
     }
 
-
-
     @Override
     @Transactional
     public WalletTransfer performPartialTransfer(CreateWalletTransferDto request) {

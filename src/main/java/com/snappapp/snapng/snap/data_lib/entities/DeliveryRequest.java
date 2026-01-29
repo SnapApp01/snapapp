@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "delivery_requests")
@@ -52,4 +54,10 @@ public class DeliveryRequest extends BaseEntity {
     private Vehicle vehicle;
     private Long calculatedFee;
     private Long agreedFee;
+    @OneToMany(
+            mappedBy = "request",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL
+    )
+    private List<DeliveryPriceProposal> proposals = new ArrayList<>();
 }
