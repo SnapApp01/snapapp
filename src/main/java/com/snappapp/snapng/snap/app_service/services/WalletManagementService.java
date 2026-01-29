@@ -81,6 +81,7 @@ public class WalletManagementService {
 //        return walletTransactionService.getAll(walletKey, page,size).map(WalletTransactionResponse::new);
 //    }
 
+    @Transactional
     public void startRequestPayment(DeliveryRequest request){
         if(!DeliveryRequestStatus.AWAITING_PAYMENT.equals(request.getStatus())){
             return;

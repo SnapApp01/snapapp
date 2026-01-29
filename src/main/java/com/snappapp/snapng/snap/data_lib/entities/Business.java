@@ -24,6 +24,8 @@ public class Business extends BaseEntity {
             joinColumns = @JoinColumn(name = "business_id",referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "location_id",referencedColumnName = "id"))
     private Set<Location> locations;
+    @Column(unique = true, nullable = false)
+    private String identifier;
     private Boolean isOnline = false;
     private Boolean isVerified = false;
     private Long balance;

@@ -72,7 +72,9 @@ public class BusinessServiceImpl implements BusinessService {
         business.setName(StringUtilities.trim(dto.getCompanyName()));
         business.setCode(IdUtilities.shortUUID());
         business.setBalance(0L);
-        return repo.save(business);
+        business.setIdentifier(
+                "SNAP-BUS-" + IdUtilities.shortUUID()
+        );        return repo.save(business);
     }
 
     @Override

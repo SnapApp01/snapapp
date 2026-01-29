@@ -1,5 +1,6 @@
 package com.snappapp.snapng.snap.app_service.controllers;
 
+import com.snappapp.snapng.enums.NotificationOwnerType;
 import com.snappapp.snapng.snap.app_service.apimodels.AppNotificationResponse;
 import com.snappapp.snapng.snap.data_lib.entities.SnapUser;
 import com.snappapp.snapng.snap.data_lib.service.AppNotificationService;
@@ -32,10 +33,24 @@ public class NotificationController {
     }
 
     @GetMapping
-    public List<AppNotificationResponse> getNotifications(){
+    public List<AppNotificationResponse> getNotifications(
+            @RequestParam(defaultValue = "SNAP_USER") NotificationOwnerType ownerType
+    ) {
         SnapUser user = securityUtil.getCurrentLoggedInUser();
-        return appNotificationService.get(user.getId()).stream().map(AppNotificationResponse::new).toList();
+
+        return appNotificationService
+                .get(user.getId(), ownerType)
+                .stream()
+                .map(AppNotificationResponse::new)
+                .toList();
     }
+
+
+//    @GetMapping
+//    public List<AppNotificationResponse> getNotifications(){
+//        SnapUser user = securityUtil.getCurrentLoggedInUser();
+//        return appNotificationService.get(user.getId()).stream().map(AppNotificationResponse::new).toList();
+//    }
 
     @PutMapping("/read/{ref}")
     public void read(@PathVariable("ref")String ref){

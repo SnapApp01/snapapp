@@ -1,10 +1,13 @@
 package com.snappapp.snapng.snap.data_lib.service.impl;
 
+import com.snappapp.snapng.enums.NotificationOwnerType;
 import com.snappapp.snapng.snap.data_lib.dtos.AddAppNotificationDto;
 import com.snappapp.snapng.snap.data_lib.entities.AppNotification;
+import com.snappapp.snapng.snap.data_lib.entities.Business;
 import com.snappapp.snapng.snap.data_lib.entities.SnapUser;
 import com.snappapp.snapng.snap.data_lib.repositories.AppNotificationRepository;
 import com.snappapp.snapng.snap.data_lib.service.AppNotificationService;
+import com.snappapp.snapng.snap.data_lib.service.BusinessService;
 import com.snappapp.snapng.snap.data_lib.service.SnapUserService;
 import com.snappapp.snapng.snap.utils.utilities.IdUtilities;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +24,12 @@ public class AppNotificationServiceImpl implements AppNotificationService {
 
     private final AppNotificationRepository repo;
     private final SnapUserService userService;
+    private final BusinessService businessService;
 
-    public AppNotificationServiceImpl(AppNotificationRepository repo, SnapUserService userService) {
+    public AppNotificationServiceImpl(AppNotificationRepository repo, SnapUserService userService, BusinessService businessService) {
         this.repo = repo;
         this.userService = userService;
+        this.businessService = businessService;
     }
 
 //    @Override
@@ -32,17 +37,45 @@ public class AppNotificationServiceImpl implements AppNotificationService {
 //        return repo.findByIdAndArchivedFalse(id, PageRequest.of(0,20, Sort.Direction.DESC,"id")).getContent();
 //    }
 
+//    @Override
+//    public List<AppNotification> get(Long userId) {
+//        SnapUser user = userService.findById(userId);
+//
+//        return repo
+//                .findByUidAndArchivedFalse(
+//                        user.getIdentifier(),
+//                        PageRequest.of(0, 20, Sort.Direction.DESC, "createdAt")
+//                )
+//                .getContent();
+//    }
+
     @Override
-    public List<AppNotification> get(Long userId) {
+    public List<AppNotification> get(Long userId, NotificationOwnerType ownerType) {
+
         SnapUser user = userService.findById(userId);
+
+        String uid;
+
+        if (ownerType == NotificationOwnerType.BUSINESS) {
+            Business business = businessService.getBusinessOfUser(user);
+
+            if (business == null) {
+                return List.of(); // user has no business
+            }
+
+            uid = business.getIdentifier(); // IMPORTANT
+        } else {
+            uid = user.getIdentifier();
+        }
 
         return repo
                 .findByUidAndArchivedFalse(
-                        user.getIdentifier(),
+                        uid,
                         PageRequest.of(0, 20, Sort.Direction.DESC, "createdAt")
                 )
                 .getContent();
     }
+
 
     @Override
     public AppNotification getLatest(String uid) {
