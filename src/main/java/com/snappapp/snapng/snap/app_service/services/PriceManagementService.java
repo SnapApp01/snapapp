@@ -12,6 +12,7 @@ import com.snappapp.snapng.snap.data_lib.entities.*;
 import com.snappapp.snapng.snap.data_lib.enums.DeliveryRequestStatus;
 import com.snappapp.snapng.snap.data_lib.enums.NotificationTask;
 import com.snappapp.snapng.snap.data_lib.enums.NotificationTitle;
+import com.snappapp.snapng.snap.data_lib.repositories.DeliveryRequestRepository;
 import com.snappapp.snapng.snap.data_lib.service.*;
 import com.snappapp.snapng.snap.utils.utilities.MoneyUtilities;
 import jakarta.transaction.Transactional;
@@ -30,16 +31,18 @@ public class PriceManagementService {
     private final BusinessService businessService;
     private final DeliveryPriceProposalService proposalService;
     private final DeliveryRequestService deliveryRequestService;
+    private final DeliveryRequestRepository deliveryRequestRepository;
     private final VehicleService vehicleService;
     private final WalletManagementService walletManagementService;
     private final PushNotificationService notificationService;
     private final DeliveryRequestPendingPaymentService pendingPaymentService;
 
-    public PriceManagementService(SnapUserService userService, BusinessService businessService, DeliveryPriceProposalService proposalService, DeliveryRequestService deliveryRequestService, VehicleService vehicleService, WalletManagementService walletManagementService, PushNotificationService notificationService, DeliveryRequestPendingPaymentService pendingPaymentService) {
+    public PriceManagementService(SnapUserService userService, BusinessService businessService, DeliveryPriceProposalService proposalService, DeliveryRequestService deliveryRequestService, DeliveryRequestRepository deliveryRequestRepository, VehicleService vehicleService, WalletManagementService walletManagementService, PushNotificationService notificationService, DeliveryRequestPendingPaymentService pendingPaymentService) {
         this.userService = userService;
         this.businessService = businessService;
         this.proposalService = proposalService;
         this.deliveryRequestService = deliveryRequestService;
+        this.deliveryRequestRepository = deliveryRequestRepository;
         this.vehicleService = vehicleService;
         this.walletManagementService = walletManagementService;
         this.notificationService = notificationService;
@@ -209,6 +212,8 @@ public class PriceManagementService {
         }
 
         DeliveryRequest request = proposal.getRequest();
+        request.setAgreedFee(proposal.getFee());
+        deliveryRequestRepository.save(request);
 
         // 2️⃣ 🔥 CHECK WALLET BALANCE FIRST (NO DEBIT)
         if (user.getBalance().compareTo(proposal.getFee()) < 0) {
