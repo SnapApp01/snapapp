@@ -227,8 +227,7 @@ public class DeliveryRequestManagementService {
         // 5️⃣ Build and return response
         DeliveryRequestRetrievalResponse.DeliveryRequestRetrievalResponseBuilder builder =
                 DeliveryRequestRetrievalResponse.builder()
-                        .request(request)
-                        .proposalId(proposalId);
+                        .request(request);
 
         if (pendingPayment != null) {
             builder.expiryTimeForPayment(pendingPayment.getExpiryTime());
