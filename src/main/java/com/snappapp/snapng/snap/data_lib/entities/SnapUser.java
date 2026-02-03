@@ -125,6 +125,7 @@ public class SnapUser extends BaseEntity {
             inverseJoinColumns = @JoinColumn(name = "business_id")
     )
     @Builder.Default
+    @JsonIgnore
     private Set<Business> businesses = new HashSet<>();
 
     private String deviceToken;
