@@ -19,10 +19,13 @@ public class Business extends BaseEntity {
     private String name;
     @Column(unique = true)
     private String code;
-    @ManyToMany(fetch = FetchType.LAZY,cascade = CascadeType.PERSIST)
-    @JoinTable(name = "businesses_locations",
-            joinColumns = @JoinColumn(name = "business_id",referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "location_id",referencedColumnName = "id"))
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @JoinTable(
+            name = "businesses_locations",
+            joinColumns = @JoinColumn(name = "business_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "location_id", referencedColumnName = "id")
+    )
+    @JsonIgnore
     private Set<Location> locations;
     @Column(unique = true, nullable = false)
     private String identifier;

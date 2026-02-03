@@ -23,9 +23,6 @@ public class DeliveryRequestRetrievalResponse {
 
     @JsonIgnore
     private LocalDateTime expiryTimeForPayment;
-//
-//    @JsonProperty("proposalId")
-//    public String proposalId(){return request.getProposals().get(0).getProposalId();}
 
     @JsonProperty("trackId")
     public String trackId(){
