@@ -9,6 +9,8 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class AddressRetrievalResponse {
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Location location;
 
     @JsonProperty("address")
@@ -37,8 +39,7 @@ public class AddressRetrievalResponse {
     }
 
     @JsonProperty("latitude")
-    private Double latitude(){
+    public Double latitude(){
         return location.getLatitude();
     }
-
 }
