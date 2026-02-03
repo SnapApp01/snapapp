@@ -1,8 +1,12 @@
 package com.snappapp.snapng.snap.app_service.apimodels;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.snappapp.snapng.snap.data_lib.entities.Location;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
@@ -10,7 +14,7 @@ import lombok.*;
 @Builder
 public class AddressRetrievalResponse {
 
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @JsonIgnore
     private Location location;
 
     @JsonProperty("address")
