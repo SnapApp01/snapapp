@@ -420,7 +420,7 @@ public class DeliveryRequestManagementService {
             log.info("Delivery completed. trackingId={}", trackingId);
 
             notificationService.send(AddAppNotificationDto.builder()
-                    .message("Delivery has been completed, funds have been released")
+                    .message("Delivery has been completed, funds have been released successfully")
                     .uid(request.getBusinessUserId())
                     .task(NotificationTask.RIDER_DELIVERY.name())
                     .taskId(request.getTrackingId())
