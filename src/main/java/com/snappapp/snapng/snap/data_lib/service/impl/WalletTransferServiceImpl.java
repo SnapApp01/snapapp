@@ -117,33 +117,100 @@ public class WalletTransferServiceImpl implements WalletTransferService {
     @Override
     @Transactional
     public WalletTransfer performPartialTransfer(CreateWalletTransferDto request) {
-        Wallet debitWallet = walletService.validateBalances(request.getDebitAmount(),request.getDebitWalletKey(),true,true);
-        Wallet creditWallet = walletService.validateBalances(request.getAmount(),request.getCreditWalletKey(),true,true);
+
+        Long amount = request.getAmount();
+
+        Wallet debitWallet = walletService.validateBalances(
+                amount,
+                request.getDebitWalletKey(),
+                true,
+                true
+        );
+
+        Wallet creditWallet = walletService.validateBalances(
+                amount,
+                request.getCreditWalletKey(),
+                true,
+                true
+        );
+
         WalletTransfer transfer = createWalletTransfer(request);
         transfer.setCreditWallet(creditWallet.getWalletKey());
         transfer.setDebitWallet(debitWallet.getWalletKey());
-        WalletTransaction debitTransaction = transactionService.startTransaction(CreateWalletTransactionDto
-                .builder()
-                .amount(request.getAmount())
-                .wallet(debitWallet)
-                .isDebit(true)
-                .narration(request.getNarration())
-                .ref(transfer.getTransferRefId())
-                .build());
-        WalletTransaction creditTransaction = transactionService.startTransaction(CreateWalletTransactionDto
-                .builder()
-                .wallet(creditWallet)
-                .isDebit(false)
-                .ref(transfer.getTransferRefId())
-                .narration(request.getNarration())
-                .amount(request.getAmount())
-                .build());
-        walletService.updateBalances(request.getDebitAmount(),request.getDebitWalletKey(),false,true);
-        walletService.updateBalances(request.getAmount(),request.getCreditWalletKey(),true,false);
+
+        WalletTransaction debitTransaction =
+                transactionService.startTransaction(
+                        CreateWalletTransactionDto.builder()
+                                .amount(amount)
+                                .wallet(debitWallet)
+                                .isDebit(true)
+                                .narration(request.getNarration())
+                                .ref(transfer.getTransferRefId())
+                                .build()
+                );
+
+        WalletTransaction creditTransaction =
+                transactionService.startTransaction(
+                        CreateWalletTransactionDto.builder()
+                                .wallet(creditWallet)
+                                .isDebit(false)
+                                .ref(transfer.getTransferRefId())
+                                .narration(request.getNarration())
+                                .amount(amount)
+                                .build()
+                );
+
+        walletService.updateBalances(
+                amount,
+                request.getDebitWalletKey(),
+                false,
+                true
+        );
+
+        walletService.updateBalances(
+                amount,
+                request.getCreditWalletKey(),
+                true,
+                false
+        );
+
         transfer.setCreditRef(creditTransaction.getReference());
         transfer.setDebitRef(debitTransaction.getReference());
+
         return repo.save(transfer);
     }
+
+
+//    @Override
+//    @Transactional
+//    public WalletTransfer performPartialTransfer(CreateWalletTransferDto request) {
+//        Wallet debitWallet = walletService.validateBalances(request.getDebitAmount(),request.getDebitWalletKey(),true,true);
+//        Wallet creditWallet = walletService.validateBalances(request.getAmount(),request.getCreditWalletKey(),true,true);
+//        WalletTransfer transfer = createWalletTransfer(request);
+//        transfer.setCreditWallet(creditWallet.getWalletKey());
+//        transfer.setDebitWallet(debitWallet.getWalletKey());
+//        WalletTransaction debitTransaction = transactionService.startTransaction(CreateWalletTransactionDto
+//                .builder()
+//                .amount(request.getAmount())
+//                .wallet(debitWallet)
+//                .isDebit(true)
+//                .narration(request.getNarration())
+//                .ref(transfer.getTransferRefId())
+//                .build());
+//        WalletTransaction creditTransaction = transactionService.startTransaction(CreateWalletTransactionDto
+//                .builder()
+//                .wallet(creditWallet)
+//                .isDebit(false)
+//                .ref(transfer.getTransferRefId())
+//                .narration(request.getNarration())
+//                .amount(request.getAmount())
+//                .build());
+//        walletService.updateBalances(request.getDebitAmount(),request.getDebitWalletKey(),false,true);
+//        walletService.updateBalances(request.getAmount(),request.getCreditWalletKey(),true,false);
+//        transfer.setCreditRef(creditTransaction.getReference());
+//        transfer.setDebitRef(debitTransaction.getReference());
+//        return repo.save(transfer);
+//    }
 
     @Override
     @Transactional

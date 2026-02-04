@@ -36,8 +36,9 @@ public class PriceManagementService {
     private final WalletManagementService walletManagementService;
     private final PushNotificationService notificationService;
     private final DeliveryRequestPendingPaymentService pendingPaymentService;
+    private final WalletService walletService;
 
-    public PriceManagementService(SnapUserService userService, BusinessService businessService, DeliveryPriceProposalService proposalService, DeliveryRequestService deliveryRequestService, DeliveryRequestRepository deliveryRequestRepository, VehicleService vehicleService, WalletManagementService walletManagementService, PushNotificationService notificationService, DeliveryRequestPendingPaymentService pendingPaymentService) {
+    public PriceManagementService(SnapUserService userService, BusinessService businessService, DeliveryPriceProposalService proposalService, DeliveryRequestService deliveryRequestService, DeliveryRequestRepository deliveryRequestRepository, VehicleService vehicleService, WalletManagementService walletManagementService, PushNotificationService notificationService, DeliveryRequestPendingPaymentService pendingPaymentService, WalletService walletService) {
         this.userService = userService;
         this.businessService = businessService;
         this.proposalService = proposalService;
@@ -47,6 +48,7 @@ public class PriceManagementService {
         this.walletManagementService = walletManagementService;
         this.notificationService = notificationService;
         this.pendingPaymentService = pendingPaymentService;
+        this.walletService = walletService;
     }
 
     @Transactional
@@ -326,49 +328,131 @@ public class PriceManagementService {
     public DeliveryPriceProposalResponse acceptProposal(Long userId,
                                                         String proposalId) {
 
+        log.info("[ACCEPT_PROPOSAL] Start acceptProposal. userId={}, proposalId={}", userId, proposalId);
+
         SnapUser user = userService.getUserById(userId);
+
+        log.info("[ACCEPT_PROPOSAL] Loaded user. id={}, walletKey={}",
+                user.getId(), user.getWalletKey());
 
         DeliveryPriceProposal proposal =
                 proposalService.getProposal(proposalId, user);
 
-        Vehicle vehicle = vehicleService.getVehicleById(proposal.getVehicleId());
+        log.info("[ACCEPT_PROPOSAL] Loaded proposal. id={}, vehicleId={}, requestId={}, fee(minor)={}, fee(naira)={}",
+                proposal.getId(),
+                proposal.getVehicleId(),
+                proposal.getDeliveryRequestId(),
+                proposal.getFee(),
+                MoneyUtilities.fromMinorToDouble(proposal.getFee()));
 
-        // 1️⃣ Check vehicle availability (ID based now)
-        if (deliveryRequestService
-                .vehicleActiveRequest(vehicle)) {
+        Vehicle vehicle =
+                vehicleService.getVehicleById(proposal.getVehicleId());
+
+        log.info("[ACCEPT_PROPOSAL] Loaded vehicle. id={}, available={}",
+                vehicle.getId(),
+                vehicle.getAvailable());
+
+        boolean hasActiveRequest =
+                deliveryRequestService.vehicleActiveRequest(vehicle);
+
+        log.info("[ACCEPT_PROPOSAL] vehicleActiveRequest result. vehicleId={}, hasActiveRequest={}",
+                vehicle.getId(),
+                hasActiveRequest);
+
+        // 1️⃣ Check vehicle availability
+        if (hasActiveRequest) {
+            log.warn("[ACCEPT_PROPOSAL] Vehicle already has an active request. vehicleId={}",
+                    vehicle.getId());
 
             throw new FailedProcessException(
                     "Sorry, the vehicle is no longer available for your request"
             );
         }
 
+        // ---------------- Wallet ----------------
+
+        Wallet wallet =
+                walletService.get(user.getWalletKey());
+
+        log.info("[ACCEPT_PROPOSAL] Loaded wallet. walletKey={}, availableBalance(minor)={}, availableBalance(naira)={}, bookBalance(minor)={}",
+                wallet.getWalletKey(),
+                wallet.getAvailableBalance(),
+                MoneyUtilities.fromMinorToDouble(wallet.getAvailableBalance()),
+                wallet.getBookBalance());
+
+        // ---------------- Delivery request ----------------
+
         DeliveryRequest request =
                 deliveryRequestService
                         .getDeliveryRequestById(
                                 proposal.getDeliveryRequestId());
 
+        log.info("[ACCEPT_PROPOSAL] Loaded delivery request. id={}, trackingId={}, agreedFee(before)={}",
+                request.getId(),
+                request.getTrackingId(),
+                request.getAgreedFee());
+
         request.setAgreedFee(proposal.getFee());
         deliveryRequestRepository.save(request);
 
-        // 2️⃣ wallet check
-        if (user.getBalance().compareTo(proposal.getFee()) < 0) {
+        log.info("[ACCEPT_PROPOSAL] Updated agreed fee on request. requestId={}, agreedFee(minor)={}, agreedFee(naira)={}",
+                request.getId(),
+                request.getAgreedFee(),
+                MoneyUtilities.fromMinorToDouble(request.getAgreedFee()));
+
+        // ---------------- Wallet check ----------------
+
+        Long balanceMinor = wallet.getAvailableBalance();
+        Long feeMinor = proposal.getFee();
+
+        log.info("[ACCEPT_PROPOSAL] Wallet check. walletKey={}, balance(minor)={}, balance(naira)={}, fee(minor)={}, fee(naira)={}",
+                wallet.getWalletKey(),
+                balanceMinor,
+                MoneyUtilities.fromMinorToDouble(balanceMinor),
+                feeMinor,
+                MoneyUtilities.fromMinorToDouble(feeMinor));
+
+        if (balanceMinor == null || feeMinor == null || balanceMinor < feeMinor) {
+
+            log.warn("[ACCEPT_PROPOSAL] Insufficient balance. walletKey={}, balance(minor)={}, fee(minor)={}",
+                    wallet.getWalletKey(),
+                    balanceMinor,
+                    feeMinor);
+
             throw new InsufficientBalanceException("Insufficient wallet balance");
         }
 
         // 3️⃣ Accept proposal
         proposalService.updateProposal(proposalId, true);
 
+        log.info("[ACCEPT_PROPOSAL] Proposal accepted. proposalId={}", proposalId);
+
         // 4️⃣ Assign rider
         DeliveryRequest deliveryRequest =
                 deliveryRequestService.assignToVehicleWithProposal(proposal);
 
+        log.info("[ACCEPT_PROPOSAL] Rider assigned. requestId={}, vehicleId={}",
+                deliveryRequest.getId(),
+                vehicle.getId());
+
         // 5️⃣ Create pending payment
         pendingPaymentService.create(deliveryRequest);
+
+        log.info("[ACCEPT_PROPOSAL] Pending payment created. requestId={}",
+                deliveryRequest.getId());
 
         // 6️⃣ Take payment
         walletManagementService.startRequestPayment(deliveryRequest);
 
+        log.info("[ACCEPT_PROPOSAL] Wallet debit completed. requestId={}, amount(minor)={}, amount(naira)={}",
+                deliveryRequest.getId(),
+                proposal.getFee(),
+                MoneyUtilities.fromMinorToDouble(proposal.getFee()));
+
         pendingPaymentService.markPaid(deliveryRequest);
+
+        log.info("[ACCEPT_PROPOSAL] Pending payment marked as paid. requestId={}",
+                deliveryRequest.getId());
 
         // 7️⃣ Notify
         notificationService.send(
@@ -380,13 +464,19 @@ public class PriceManagementService {
                         .taskId(deliveryRequest.getTrackingId())
                         .build()
         );
+
+        log.info("[ACCEPT_PROPOSAL] Notification sent. userId={}, trackingId={}",
+                deliveryRequest.getBusinessUserId(),
+                deliveryRequest.getTrackingId());
+
         return new DeliveryPriceProposalResponse(
                 proposal,
                 deliveryRequest,
                 vehicle
         );
-
     }
+
+
 
     @Transactional
     public DeliveryPriceProposalResponse rejectProposal(
