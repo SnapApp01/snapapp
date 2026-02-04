@@ -23,4 +23,15 @@ public interface WalletService {
     default String generateKey(){
         return StringUtilities.leftPadZeroes(new SecureRandom().nextInt(999999),10);
     }
+
+
+    Wallet getByWalletKey(String walletKey);
+
+    void holdFromAvailableToBook(String walletKey, Long amount);
+
+    void releaseFromBook(String walletKey, Long amount);
+
+    void moveBookToAvailable(String walletKey, Long amount);
+    void creditBookOnly(String walletKey, Long amount);
+
 }

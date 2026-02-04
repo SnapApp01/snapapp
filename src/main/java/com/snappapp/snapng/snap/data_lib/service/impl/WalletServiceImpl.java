@@ -6,6 +6,7 @@ import com.snappapp.snapng.exceptions.ResourceNotFoundException;
 import com.snappapp.snapng.snap.data_lib.entities.Wallet;
 import com.snappapp.snapng.snap.data_lib.repositories.WalletRepository;
 import com.snappapp.snapng.snap.data_lib.service.WalletService;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -121,5 +122,111 @@ public class WalletServiceImpl implements WalletService {
             }
         }
         return wallet;
+    }
+
+    @Override
+    public Wallet getByWalletKey(String walletKey) {
+        return repo.findByWalletKey(walletKey)
+                .orElseThrow(() ->
+                        new FailedProcessException("Wallet not found: " + walletKey));
+    }
+
+    /**
+     * available -> book   (hold)
+     */
+    @Override
+    @Transactional
+    public void holdFromAvailableToBook(String walletKey, Long amount) {
+
+        Wallet wallet = getByWalletKey(walletKey);
+
+        log.info("[WALLET_HOLD] wallet={}, amount={}, availableBefore={}, bookBefore={}",
+                walletKey, amount,
+                wallet.getAvailableBalance(),
+                wallet.getBookBalance());
+
+        if (wallet.getAvailableBalance() < amount) {
+            throw new FailedProcessException("Insufficient available balance");
+        }
+
+        wallet.setAvailableBalance(wallet.getAvailableBalance() - amount);
+        wallet.setBookBalance(wallet.getBookBalance() + amount);
+
+        repo.save(wallet);
+
+        log.info("[WALLET_HOLD_DONE] wallet={}, availableAfter={}, bookAfter={}",
+                walletKey,
+                wallet.getAvailableBalance(),
+                wallet.getBookBalance());
+    }
+
+    /**
+     * book -> remove   (user side escrow consumption)
+     */
+    @Override
+    @Transactional
+    public void releaseFromBook(String walletKey, Long amount) {
+
+        Wallet wallet = getByWalletKey(walletKey);
+
+        log.info("[WALLET_BOOK_DEBIT] wallet={}, amount={}, bookBefore={}",
+                walletKey, amount, wallet.getBookBalance());
+
+        if (wallet.getBookBalance() < amount) {
+            throw new FailedProcessException("Insufficient book balance");
+        }
+
+        wallet.setBookBalance(wallet.getBookBalance() - amount);
+
+        repo.save(wallet);
+
+        log.info("[WALLET_BOOK_DEBIT_DONE] wallet={}, bookAfter={}",
+                walletKey, wallet.getBookBalance());
+    }
+
+    /**
+     * book -> available   (recipient settlement)
+     */
+    @Override
+    @Transactional
+    public void moveBookToAvailable(String walletKey, Long amount) {
+
+        Wallet wallet = getByWalletKey(walletKey);
+
+        log.info("[WALLET_BOOK_TO_AVAILABLE] wallet={}, amount={}, bookBefore={}, availableBefore={}",
+                walletKey, amount,
+                wallet.getBookBalance(),
+                wallet.getAvailableBalance());
+
+        if (wallet.getBookBalance() < amount) {
+            throw new FailedProcessException("Insufficient book balance");
+        }
+
+        wallet.setBookBalance(wallet.getBookBalance() - amount);
+        wallet.setAvailableBalance(wallet.getAvailableBalance() + amount);
+
+        repo.save(wallet);
+
+        log.info("[WALLET_BOOK_TO_AVAILABLE_DONE] wallet={}, bookAfter={}, availableAfter={}",
+                walletKey,
+                wallet.getBookBalance(),
+                wallet.getAvailableBalance());
+    }
+
+    @Override
+    @Transactional
+    public void creditBookOnly(String walletKey, Long amount) {
+
+        Wallet wallet = getByWalletKey(walletKey);
+
+        log.info("[WALLET_BOOK_CREDIT] wallet={}, amount={}, bookBefore={}",
+                walletKey, amount, wallet.getBookBalance());
+
+        wallet.setBookBalance(wallet.getBookBalance() + amount);
+
+        repo.save(wallet);
+
+        log.info("[WALLET_BOOK_CREDIT_DONE] wallet={}, bookAfter={}",
+                walletKey, wallet.getBookBalance());
     }
 }
