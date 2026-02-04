@@ -120,100 +120,113 @@ public class WalletTransferServiceImpl implements WalletTransferService {
 
         Long amount = request.getAmount();
 
-        log.info("[ESCROW_START] ref={}, userWallet={}, recipientWallet={}, amount={}",
+        log.info("[TRANSFER_ESCROW_START] ref={}, amount={}, from={}, to={}",
                 request.getReference(),
+                amount,
                 request.getDebitWalletKey(),
-                request.getCreditWalletKey(),
-                amount);
+                request.getCreditWalletKey());
 
         WalletTransfer transfer = createWalletTransfer(request);
 
         transfer.setDebitWallet(request.getDebitWalletKey());
         transfer.setCreditWallet(request.getCreditWalletKey());
+        transfer.setAmount(amount);
+        transfer.setDebitStatus(TransferStatus.PENDING);
+        transfer.setCreditStatus(TransferStatus.PENDING);
 
-        // 1️⃣ hold from user's available → user's book
-        walletService.holdFromAvailableToBook(
+        // 1. user available -> user book
+        walletService.moveAvailableToBook(
                 request.getDebitWalletKey(),
                 amount
         );
 
-        // 2️⃣ add into recipient book
-        walletService.creditBookOnly(
+        // 2. recipient book credit
+        walletService.creditBook(
                 request.getCreditWalletKey(),
                 amount
         );
 
-        WalletTransaction debitTx = transactionService.startTransaction(
-                CreateWalletTransactionDto.builder()
-                        .amount(amount)
-                        .wallet(walletService.getByWalletKey(request.getDebitWalletKey()))
-                        .isDebit(true)
-                        .narration(request.getNarration())
-                        .ref(transfer.getTransferRefId())
-                        .build()
-        );
+        WalletTransfer saved = repo.save(transfer);
 
-        WalletTransaction creditTx = transactionService.startTransaction(
-                CreateWalletTransactionDto.builder()
-                        .amount(amount)
-                        .wallet(walletService.getByWalletKey(request.getCreditWalletKey()))
-                        .isDebit(false)
-                        .narration(request.getNarration())
-                        .ref(transfer.getTransferRefId())
-                        .build()
-        );
+        log.info("[TRANSFER_ESCROW_DONE] transferRef={}", saved.getTransferRefId());
 
-        transfer.setDebitRef(debitTx.getReference());
-        transfer.setCreditRef(creditTx.getReference());
-
-        transfer.setDebitStatus(TransferStatus.PENDING);
-        transfer.setCreditStatus(TransferStatus.PENDING);
-
-        log.info("[ESCROW_DONE] transferRef={}", transfer.getTransferRefId());
-
-        return repo.save(transfer);
+        return saved;
     }
+
 
     @Override
     @Transactional
     public WalletTransfer completeTransfer(String transferRef) {
 
-        WalletTransfer transfer = getTransfer(transferRef);
-
         log.info("[TRANSFER_COMPLETE_START] transferRef={}", transferRef);
 
+        WalletTransfer transfer = getTransfer(transferRef);
         incomplete(transfer);
 
         Long amount = transfer.getAmount();
 
+        String userWalletKey = transfer.getDebitWallet();
+        String recipientWalletKey = transfer.getCreditWallet();
+
         log.info("[TRANSFER_COMPLETE_DETAILS] userWallet={}, recipientWallet={}, amount={}",
-                transfer.getDebitWallet(),
-                transfer.getCreditWallet(),
-                amount);
+                userWalletKey, recipientWalletKey, amount);
 
-        // 1️⃣ remove held money from user's book
-        walletService.releaseFromBook(
-                transfer.getDebitWallet(),
+        // 1. user book -> remove
+        walletService.debitBook(
+                userWalletKey,
                 amount
         );
 
-        // 2️⃣ move recipient book → available
-        walletService.moveBookToAvailable(
-                transfer.getCreditWallet(),
+        // 2. recipient book -> available
+        walletService.bookToAvailable(
+                recipientWalletKey,
                 amount
         );
 
-        transactionService.completeTransaction(transfer.getDebitRef());
-        transactionService.completeTransaction(transfer.getCreditRef());
+        // 3. NOW create transactions
 
+        Wallet userWallet = walletService.getByWalletKey(userWalletKey);
+        Wallet recipientWallet = walletService.getByWalletKey(recipientWalletKey);
+
+        WalletTransaction userTx =
+                transactionService.startTransaction(
+                        CreateWalletTransactionDto.builder()
+                                .wallet(userWallet)
+                                .amount(amount)
+                                .isDebit(true)
+                                .narration("Escrow release for transfer " + transferRef)
+                                .ref(transferRef + "-DB")
+                                .build()
+                );
+
+        transactionService.completeTransaction(userTx.getReference());
+
+        WalletTransaction recipientTx =
+                transactionService.startTransaction(
+                        CreateWalletTransactionDto.builder()
+                                .wallet(recipientWallet)
+                                .amount(amount)
+                                .isDebit(false)
+                                .narration("Escrow released for transfer " + transferRef)
+                                .ref(transferRef + "-CR")
+                                .build()
+                );
+
+        transactionService.completeTransaction(recipientTx.getReference());
+
+        transfer.setDebitRef(userTx.getReference());
+        transfer.setCreditRef(recipientTx.getReference());
         transfer.setDebitStatus(TransferStatus.COMPLETE);
         transfer.setCreditStatus(TransferStatus.COMPLETE);
         transfer.setCompletedAt(LocalDateTime.now());
 
+        WalletTransfer saved = repo.save(transfer);
+
         log.info("[TRANSFER_COMPLETE_DONE] transferRef={}", transferRef);
 
-        return repo.save(transfer);
+        return saved;
     }
+
 
     @Override
     @Transactional(rollbackOn = Exception.class)
@@ -297,52 +310,4 @@ public class WalletTransferServiceImpl implements WalletTransferService {
         transfer.setNarration(dto.getNarration());
         return repo.save(transfer);
     }
-
-    //    @Override
-//    @Transactional
-//    public WalletTransfer performPartialTransfer(CreateWalletTransferDto request) {
-//        Wallet debitWallet = walletService.validateBalances(request.getDebitAmount(),request.getDebitWalletKey(),true,true);
-//        Wallet creditWallet = walletService.validateBalances(request.getAmount(),request.getCreditWalletKey(),true,true);
-//        WalletTransfer transfer = createWalletTransfer(request);
-//        transfer.setCreditWallet(creditWallet.getWalletKey());
-//        transfer.setDebitWallet(debitWallet.getWalletKey());
-//        WalletTransaction debitTransaction = transactionService.startTransaction(CreateWalletTransactionDto
-//                .builder()
-//                .amount(request.getAmount())
-//                .wallet(debitWallet)
-//                .isDebit(true)
-//                .narration(request.getNarration())
-//                .ref(transfer.getTransferRefId())
-//                .build());
-//        WalletTransaction creditTransaction = transactionService.startTransaction(CreateWalletTransactionDto
-//                .builder()
-//                .wallet(creditWallet)
-//                .isDebit(false)
-//                .ref(transfer.getTransferRefId())
-//                .narration(request.getNarration())
-//                .amount(request.getAmount())
-//                .build());
-//        walletService.updateBalances(request.getDebitAmount(),request.getDebitWalletKey(),false,true);
-//        walletService.updateBalances(request.getAmount(),request.getCreditWalletKey(),true,false);
-//        transfer.setCreditRef(creditTransaction.getReference());
-//        transfer.setDebitRef(debitTransaction.getReference());
-//        return repo.save(transfer);
-//    }
-
-    //    @Override
-//    @Transactional
-//    public WalletTransfer completeTransfer(String transferRef) {
-//        WalletTransfer transfer = getTransfer(transferRef);
-//        incomplete(transfer);
-//        walletService.validateBalances(transfer.getDebitAmount(),transfer.getDebitWallet(),true,false);
-//        walletService.validateBalances(transfer.getAmount(),transfer.getCreditWallet(),false,true);
-//        transactionService.completeTransaction(transfer.getDebitRef());
-//        transactionService.completeTransaction(transfer.getCreditRef());
-//        walletService.updateBalances(transfer.getDebitAmount(),transfer.getDebitWallet(),true,false);
-//        walletService.updateBalances(transfer.getAmount(),transfer.getCreditWallet(),false,true);
-//        transfer.setCreditStatus(TransferStatus.COMPLETE);
-//        transfer.setDebitStatus(TransferStatus.COMPLETE);
-//        transfer.setCompletedAt(LocalDateTime.now());
-//        return repo.save(transfer);
-//    }
 }

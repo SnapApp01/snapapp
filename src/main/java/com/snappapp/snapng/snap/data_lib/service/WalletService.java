@@ -2,6 +2,7 @@ package com.snappapp.snapng.snap.data_lib.service;
 
 import com.snappapp.snapng.snap.data_lib.entities.Wallet;
 import com.snappapp.snapng.snap.utils.utilities.StringUtilities;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -27,11 +28,11 @@ public interface WalletService {
 
     Wallet getByWalletKey(String walletKey);
 
-    void holdFromAvailableToBook(String walletKey, Long amount);
+    void moveAvailableToBook(String walletKey, Long amount);
 
-    void releaseFromBook(String walletKey, Long amount);
+    void creditBook(String walletKey, Long amount);
 
-    void moveBookToAvailable(String walletKey, Long amount);
-    void creditBookOnly(String walletKey, Long amount);
+    void debitBook(String walletKey, Long amount);
 
+    void bookToAvailable(String walletKey, Long amount);
 }
