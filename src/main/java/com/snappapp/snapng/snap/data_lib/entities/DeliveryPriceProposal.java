@@ -11,12 +11,13 @@ import lombok.Setter;
 @Getter
 @Setter
 public class DeliveryPriceProposal extends BaseEntity {
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "vehicle_id",referencedColumnName = "id")
-    private Vehicle vehicle;
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "request_id", referencedColumnName = "id")
-    private DeliveryRequest request;
+
+    @Column(name = "vehicle_id")
+    private Long vehicleId;
+
+    @Column(name = "request_id")
+    private Long deliveryRequestId;
+
     @Column(unique = true)
     private String proposalId;
     private String comment;

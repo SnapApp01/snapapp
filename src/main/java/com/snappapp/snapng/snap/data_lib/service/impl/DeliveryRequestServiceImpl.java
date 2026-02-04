@@ -1,12 +1,15 @@
 package com.snappapp.snapng.snap.data_lib.service.impl;
 
 import com.snappapp.snapng.exceptions.DeliveryAlreadyAssignedException;
+import com.snappapp.snapng.exceptions.FailedProcessException;
 import com.snappapp.snapng.exceptions.ResourceNotFoundException;
 import com.snappapp.snapng.snap.data_lib.dtos.RequestCreationDto;
 import com.snappapp.snapng.snap.data_lib.entities.*;
 import com.snappapp.snapng.snap.data_lib.enums.*;
 import com.snappapp.snapng.snap.data_lib.repositories.DeliveryRequestRepository;
+import com.snappapp.snapng.snap.data_lib.service.BusinessService;
 import com.snappapp.snapng.snap.data_lib.service.DeliveryRequestService;
+import com.snappapp.snapng.snap.data_lib.service.VehicleService;
 import com.snappapp.snapng.snap.utils.utilities.DateTimeUtils;
 import com.snappapp.snapng.snap.utils.utilities.IdUtilities;
 import lombok.extern.slf4j.Slf4j;
@@ -21,9 +24,13 @@ import java.util.List;
 @Slf4j
 public class DeliveryRequestServiceImpl implements DeliveryRequestService {
     private final DeliveryRequestRepository repo;
+    private final VehicleService vehicleService;
+    private final BusinessService businessService;
 
-    public DeliveryRequestServiceImpl(DeliveryRequestRepository repo) {
+    public DeliveryRequestServiceImpl(DeliveryRequestRepository repo, VehicleService vehicleService, BusinessService businessService) {
         this.repo = repo;
+        this.vehicleService = vehicleService;
+        this.businessService = businessService;
     }
 
     @Override
@@ -50,29 +57,82 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
     }
 
     @Override
+    public DeliveryRequest getDeliveryRequestById(Long deliveryRequestId) {
+
+        return repo.findById(deliveryRequestId)
+                .orElseThrow(() ->
+                        new FailedProcessException("Delivery request not found"));
+    }
+
+    @Override
     public DeliveryRequest updateStatus(String trackingId, DeliveryRequestStatus status) {
         DeliveryRequest request = get(trackingId);
         request.setStatus(status);
         return repo.save(request);
     }
 
+//    @Override
+//    public DeliveryRequest assignToVehicleWithProposal(DeliveryPriceProposal proposal) {
+//        if(!FeeProposalStatus.ACCEPTED.equals(proposal.getStatus())){
+//            return proposal.getRequest();
+//        }
+//        DeliveryRequest request = proposal.getRequest();
+//        if(request.getVehicle()!=null || !DeliveryRequestStatus.NEW.equals(request.getStatus())){
+//            throw new DeliveryAlreadyAssignedException(String.format("Delivery request with tracking id %s already exist"));
+//        }
+//        request.setAgreedFee(proposal.getFee());
+//        request.setVehicle(proposal.getVehicle());
+//        request.setBusiness(proposal.getVehicle().getBusiness());
+//        request.getBusiness().getUsers();
+//        request.setBusinessUserId(request.getBusiness().getUsers().iterator().next().getIdentifier());
+//        request.setStatus(DeliveryRequestStatus.AWAITING_PAYMENT);
+//        return repo.save(request);
+//    }
+
     @Override
     public DeliveryRequest assignToVehicleWithProposal(DeliveryPriceProposal proposal) {
-        if(!FeeProposalStatus.ACCEPTED.equals(proposal.getStatus())){
-            return proposal.getRequest();
+
+        if (!FeeProposalStatus.ACCEPTED.equals(proposal.getStatus())) {
+            return getDeliveryRequestById(proposal.getDeliveryRequestId());
         }
-        DeliveryRequest request = proposal.getRequest();
-        if(request.getVehicle()!=null || !DeliveryRequestStatus.NEW.equals(request.getStatus())){
-            throw new DeliveryAlreadyAssignedException(String.format("Delivery request with tracking id %s already exist"));
+
+        DeliveryRequest request =
+                getDeliveryRequestById(proposal.getDeliveryRequestId());
+
+        if (request.getVehicle() != null
+                || !DeliveryRequestStatus.NEW.equals(request.getStatus())) {
+
+            throw new DeliveryAlreadyAssignedException(
+                    String.format("Delivery request with tracking id %s already exist",
+                            request.getTrackingId())
+            );
         }
+
+        Vehicle vehicle =
+                vehicleService.getVehicleById(proposal.getVehicleId());
+
+        Business business =
+                businessService.getBusinessById(vehicle.getBusinessId());
+
         request.setAgreedFee(proposal.getFee());
-        request.setVehicle(proposal.getVehicle());
-        request.setBusiness(proposal.getVehicle().getBusiness());
-        request.getBusiness().getUsers();
-        request.setBusinessUserId(request.getBusiness().getUsers().iterator().next().getIdentifier());
+        request.setVehicle(vehicle);              // keep existing mapping
+        request.setBusiness(business);            // keep existing mapping
+
+        // preserve your old lazy-loading side-effect
+        business.getUsers();
+
+        request.setBusinessUserId(
+                business.getUsers()
+                        .iterator()
+                        .next()
+                        .getIdentifier()
+        );
+
         request.setStatus(DeliveryRequestStatus.AWAITING_PAYMENT);
+
         return repo.save(request);
     }
+
 
     @Override
     public DeliveryRequest assignToTrip(PlannedTripOffer offer, DeliveryRequest request) {

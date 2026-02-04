@@ -10,8 +10,8 @@ import lombok.Setter;
 @Setter
 @Builder
 public class PriceProposalCreationDto {
-    private DeliveryRequest request;
-    private Vehicle vehicle;
+    private Long vehicleId;
+    private Long requestId;
     private Long amount;
     private String comment;
     private boolean businessInitiated;

@@ -54,10 +54,8 @@ public class DeliveryRequest extends BaseEntity {
     private Vehicle vehicle;
     private Long calculatedFee;
     private Long agreedFee;
-    @OneToMany(
-            mappedBy = "request",
-            fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL
-    )
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "request_id", referencedColumnName = "id")
     private List<DeliveryPriceProposal> proposals = new ArrayList<>();
+
 }

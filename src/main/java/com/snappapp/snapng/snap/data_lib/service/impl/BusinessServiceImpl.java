@@ -1,6 +1,7 @@
 package com.snappapp.snapng.snap.data_lib.service.impl;
 
 import com.google.api.client.util.Strings;
+import com.snappapp.snapng.exceptions.FailedProcessException;
 import com.snappapp.snapng.exceptions.ResourceNotFoundException;
 import com.snappapp.snapng.snap.data_lib.dtos.BusinessCreationDto;
 import com.snappapp.snapng.snap.data_lib.entities.Business;
@@ -29,6 +30,14 @@ public class BusinessServiceImpl implements BusinessService {
     public BusinessServiceImpl(BusinessRepository repo, WalletService walletService) {
         this.repo = repo;
         this.walletService = walletService;
+    }
+
+    @Override
+    public Business getBusinessById(Long businessId) {
+
+        return repo.findById(businessId)
+                .orElseThrow(() ->
+                        new FailedProcessException("Business not found"));
     }
 
     @Override

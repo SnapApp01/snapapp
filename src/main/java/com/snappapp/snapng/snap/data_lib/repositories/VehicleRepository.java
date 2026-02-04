@@ -12,6 +12,11 @@ import java.util.Optional;
 @Repository
 public interface VehicleRepository extends JpaRepository<Vehicle,Long> {
     Optional<Vehicle> findByVehicleIdAndActiveTrue(String vehicleId);
-    List<Vehicle> findByActiveTrueAndAvailableTrueAndBusiness_IsOnlineTrueAndType(VehicleType type);
-    List<Vehicle> findByBusinessAndActiveTrue(Business business);
+
+    List<Vehicle> findByActiveTrueAndAvailableTrueAndType(VehicleType type);
+
+    List<Vehicle> findByBusinessIdAndActiveTrue(Long businessId);
+
+//    List<Vehicle> findByActiveTrueAndAvailableTrueAndBusiness_IsOnlineTrueAndType(VehicleType type);
+//    List<Vehicle> findByBusinessAndActiveTrue(Business business);
 }

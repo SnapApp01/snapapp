@@ -14,5 +14,5 @@ public class VehicleCreationDto {
     private String description;
     private Integer year;
     private VehicleType type;
-    private Business business;
+    private Long businessId;
 }

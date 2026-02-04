@@ -8,6 +8,7 @@ import com.snappapp.snapng.snap.data_lib.enums.VehicleType;
 import java.util.List;
 
 public interface DeliveryRequestService {
+    DeliveryRequest getDeliveryRequestById(Long deliveryRequestId);
     DeliveryRequest createRequest(RequestCreationDto dto);
     DeliveryRequest updateStatus(String trackingId, DeliveryRequestStatus status);
     DeliveryRequest assignToVehicleWithProposal(DeliveryPriceProposal proposal);

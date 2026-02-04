@@ -9,6 +9,7 @@ import java.util.List;
 
 @Component
 public interface BusinessService {
+    Business getBusinessById(Long businessId);
     Business getBusinessOfUser(SnapUser user);
     SnapUser getUserOfBusiness(Business business);
     Business updateOnlineStatus(Business business, boolean online);

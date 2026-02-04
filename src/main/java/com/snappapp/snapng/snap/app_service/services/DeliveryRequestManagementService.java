@@ -19,6 +19,7 @@ import com.snappapp.snapng.snap.data_lib.service.*;
 import com.snappapp.snapng.snap.utils.utilities.DateTimeUtils;
 import com.snappapp.snapng.snap.utils.utilities.GeoUtilities;
 import com.snappapp.snapng.snap.utils.utilities.MoneyUtilities;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -332,6 +333,7 @@ public class DeliveryRequestManagementService {
         return responses;
     }
 
+    @Transactional
     public DeliveryRequestRetrievalResponse getUserRequest(Long userId, String trackingId) {
 
         log.debug("Fetching user request. userId={}, trackingId={}", userId, trackingId);

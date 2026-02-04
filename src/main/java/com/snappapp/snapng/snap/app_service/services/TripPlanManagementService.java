@@ -46,36 +46,86 @@ public class TripPlanManagementService {
     }
 
     public PlannedTripResponse create(Long userId, CreatePlannedTripRequest request){
-        Location start = locationService.addLocation(LocationCreationDto.builder()
-                .address(request.getStart().getAddress())
-                .city(request.getStart().getCity())
-                .state(request.getStart().getState())
-                .longitude(request.getStart().getLongitude())
-                .latitude(request.getStart().getLatitude())
-                .landmark(request.getStart().getLandMark())
-                .build());
-        Location end = locationService.addLocation(LocationCreationDto
-                .builder()
+
+        Location start = locationService.addLocation(
+                LocationCreationDto.builder()
+                        .address(request.getStart().getAddress())
+                        .city(request.getStart().getCity())
+                        .state(request.getStart().getState())
+                        .longitude(request.getStart().getLongitude())
+                        .latitude(request.getStart().getLatitude())
+                        .landmark(request.getStart().getLandMark())
+                        .build()
+        );
+
+        Location end = locationService.addLocation(
+                LocationCreationDto.builder()
                         .address(request.getEnd().getAddress())
                         .city(request.getEnd().getCity())
                         .state(request.getEnd().getState())
                         .longitude(request.getEnd().getLongitude())
                         .latitude(request.getEnd().getLatitude())
                         .landmark(request.getEnd().getLandMark())
-                .build());
+                        .build()
+        );
+
         SnapUser user = userService.getUserById(userId);
+
         Business business = businessService.getBusinessOfUser(user);
-        if(business==null){
+        if (business == null) {
             throw new ResourceNotFoundException("There is no business owned to this user");
         }
+
         Vehicle vehicle = vehicleService.getVehicle(request.getVehicleId());
-        if(!vehicle.getBusiness().getId().equals(business.getId())){
+
+        // ✅ new ownership check
+        if (!vehicle.getBusinessId().equals(business.getId())) {
             throw new FailedProcessException("Vehicle is not owned by this business");
         }
-        AddPlannedTripDto dto = new AddPlannedTripDto(start,end,vehicle, DateTimeUtils.parseDate(request.getDate()));
-        PlannedTrip trip = plannedTripService.save(dto,business);
+
+        AddPlannedTripDto dto = new AddPlannedTripDto(
+                start,
+                end,
+                vehicle,
+                DateTimeUtils.parseDate(request.getDate())
+        );
+
+        PlannedTrip trip = plannedTripService.save(dto, business);
+
         return new PlannedTripResponse(trip);
     }
+
+//    public PlannedTripResponse create(Long userId, CreatePlannedTripRequest request){
+//        Location start = locationService.addLocation(LocationCreationDto.builder()
+//                .address(request.getStart().getAddress())
+//                .city(request.getStart().getCity())
+//                .state(request.getStart().getState())
+//                .longitude(request.getStart().getLongitude())
+//                .latitude(request.getStart().getLatitude())
+//                .landmark(request.getStart().getLandMark())
+//                .build());
+//        Location end = locationService.addLocation(LocationCreationDto
+//                .builder()
+//                        .address(request.getEnd().getAddress())
+//                        .city(request.getEnd().getCity())
+//                        .state(request.getEnd().getState())
+//                        .longitude(request.getEnd().getLongitude())
+//                        .latitude(request.getEnd().getLatitude())
+//                        .landmark(request.getEnd().getLandMark())
+//                .build());
+//        SnapUser user = userService.getUserById(userId);
+//        Business business = businessService.getBusinessOfUser(user);
+//        if(business==null){
+//            throw new ResourceNotFoundException("There is no business owned to this user");
+//        }
+//        Vehicle vehicle = vehicleService.getVehicle(request.getVehicleId());
+//        if(!vehicle.getBusiness().getId().equals(business.getId())){
+//            throw new FailedProcessException("Vehicle is not owned by this business");
+//        }
+//        AddPlannedTripDto dto = new AddPlannedTripDto(start,end,vehicle, DateTimeUtils.parseDate(request.getDate()));
+//        PlannedTrip trip = plannedTripService.save(dto,business);
+//        return new PlannedTripResponse(trip);
+//    }
 
     @Async
     public void notifyOnPlannedTrip(String reference){

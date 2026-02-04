@@ -10,6 +10,7 @@ import java.util.List;
 
 @Component
 public interface VehicleService {
+    Vehicle getVehicleById(Long vehicleId);
     Vehicle getVehicle(String id);
     Vehicle createVehicle(VehicleCreationDto dto);
     List<Vehicle> getAvailableByType(VehicleType type);

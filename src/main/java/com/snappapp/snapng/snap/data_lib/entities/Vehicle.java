@@ -18,8 +18,7 @@ public class Vehicle extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private VehicleType type;
     private String description;
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "business_id",referencedColumnName = "id")
-    private Business business;
+    @Column(name = "business_id")
+    private Long businessId;
     private Boolean available;
 }

@@ -1,5 +1,6 @@
 package com.snappapp.snapng.snap.data_lib.service.impl;
 
+import com.snappapp.snapng.exceptions.FailedProcessException;
 import com.snappapp.snapng.exceptions.ResourceNotFoundException;
 import com.snappapp.snapng.snap.data_lib.dtos.VehicleCreationDto;
 import com.snappapp.snapng.snap.data_lib.entities.Business;
@@ -31,20 +32,31 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public Vehicle createVehicle(VehicleCreationDto dto) {
+
         Vehicle vehicle = new Vehicle();
+
         vehicle.setAvailable(true);
-        vehicle.setBusiness(dto.getBusiness());
+        vehicle.setBusinessId(dto.getBusinessId());
         vehicle.setDescription(dto.getDescription());
         vehicle.setPlateNumber(dto.getPlateNumber());
         vehicle.setType(dto.getType());
         vehicle.setYear(dto.getYear());
         vehicle.setVehicleId(IdUtilities.shortUUID());
+
         return repo.save(vehicle);
     }
 
     @Override
+    public Vehicle getVehicleById(Long vehicleId) {
+
+        return repo.findById(vehicleId)
+                .orElseThrow(() ->
+                        new FailedProcessException("Vehicle not found"));
+    }
+
+    @Override
     public List<Vehicle> getAvailableByType(VehicleType type) {
-        return repo.findByActiveTrueAndAvailableTrueAndBusiness_IsOnlineTrueAndType(type);
+        return repo.findByActiveTrueAndAvailableTrueAndType(type);
     }
 
     @Override
@@ -61,6 +73,6 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public List<Vehicle> getVehiclesForBusiness(Business business) {
-        return repo.findByBusinessAndActiveTrue(business);
+        return repo.findByBusinessIdAndActiveTrue(business.getId());
     }
 }
