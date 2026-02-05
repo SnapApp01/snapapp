@@ -32,18 +32,7 @@ public class TripPlanManagementService {
     private final PlannedTripOfferService tripOfferService;
     private final DeliveryRequestService requestService;
 
-    public TripPlanManagementService(
-            SnapUserService userService,
-            BusinessService businessService,
-            PlannedTripService plannedTripService,
-            LocationService locationService,
-            VehicleService vehicleService,
-            WalletManagementService walletManagementService,
-            PushNotificationService notificationService,
-            DeliveryRequestPendingPaymentService pendingPaymentService,
-            PlannedTripOfferService tripOfferService,
-            DeliveryRequestService requestService
-    ) {
+    public TripPlanManagementService(SnapUserService userService, BusinessService businessService, PlannedTripService plannedTripService, LocationService locationService, VehicleService vehicleService, WalletManagementService walletManagementService, PushNotificationService notificationService, DeliveryRequestPendingPaymentService pendingPaymentService, PlannedTripOfferService tripOfferService, DeliveryRequestService requestService) {
         this.userService = userService;
         this.businessService = businessService;
         this.plannedTripService = plannedTripService;
@@ -56,8 +45,8 @@ public class TripPlanManagementService {
         this.requestService = requestService;
     }
 
-    public PlannedTripResponse create(Long userId, CreatePlannedTripRequest request) {
-        log.info("Creating planned trip | userId={}", userId);
+    public PlannedTripResponse create(Long userId, CreatePlannedTripRequest request){
+        log.info("create() called | userId={}", userId);
 
         Location start = locationService.addLocation(
                 LocationCreationDto.builder()
@@ -69,7 +58,7 @@ public class TripPlanManagementService {
                         .landmark(request.getStart().getLandMark())
                         .build()
         );
-        log.debug("Start location created | id={}", start.getId());
+        log.debug("Start location created");
 
         Location end = locationService.addLocation(
                 LocationCreationDto.builder()
@@ -81,45 +70,52 @@ public class TripPlanManagementService {
                         .landmark(request.getEnd().getLandMark())
                         .build()
         );
-        log.debug("End location created | id={}", end.getId());
+        log.debug("End location created");
 
         SnapUser user = userService.getUserById(userId);
-        log.debug("User resolved | identifier={}", user.getIdentifier());
+        log.debug("User fetched");
 
         Business business = businessService.getBusinessOfUser(user);
         if (business == null) {
-            log.error("User has no business | userId={}", userId);
+            log.error("No business for userId={}", userId);
             throw new ResourceNotFoundException("There is no business owned to this user");
         }
 
         Vehicle vehicle = vehicleService.getVehicle(request.getVehicleId());
-        log.debug("Vehicle fetched | vehicleId={}, businessId={}", vehicle.getId(), vehicle.getBusinessId());
+        log.debug("Vehicle fetched");
 
         if (!vehicle.getBusinessId().equals(business.getId())) {
-            log.error("Vehicle ownership mismatch | vehicleId={}, businessId={}", vehicle.getId(), business.getId());
+            log.error("Vehicle ownership mismatch");
             throw new FailedProcessException("Vehicle is not owned by this business");
         }
 
         PlannedTrip trip = plannedTripService.save(
-                new AddPlannedTripDto(start, end, vehicle, DateTimeUtils.parseDate(request.getDate())),
+                new AddPlannedTripDto(
+                        start,
+                        end,
+                        vehicle,
+                        DateTimeUtils.parseDate(request.getDate())
+                ),
                 business
         );
 
-        log.info("Planned trip created successfully | reference={}", trip.getReference());
+        log.info("Planned trip created | reference={}", trip.getReference());
         return new PlannedTripResponse(trip);
     }
 
     @Async
-    public void notifyOnPlannedTrip(String reference) {
-        log.info("Sending planned trip notifications | reference={}", reference);
+    public void notifyOnPlannedTrip(String reference){
+        log.info("notifyOnPlannedTrip() | reference={}", reference);
+
         List<SnapUser> users = userService.getUsers();
-        users.forEach(user -> {
-            log.debug("Sending notification to user | uid={}", user.getIdentifier());
+        log.debug("Users fetched for notification | count={}", users.size());
+
+        users.forEach(e -> {
             notificationService.send(
                     AddAppNotificationDto.builder()
                             .message("There is a new available rider offer. Check it out")
                             .title(NotificationTitle.DELIVERY)
-                            .uid(user.getIdentifier())
+                            .uid(e.getIdentifier())
                             .task(NotificationTask.PLANNED_TRIP.name())
                             .taskId(reference)
                             .build()
@@ -127,13 +123,14 @@ public class TripPlanManagementService {
         });
     }
 
-    public List<PlannedTripResponse> getTripsByBusiness(Long userId) {
-        log.info("Fetching trips by business | userId={}", userId);
+    public List<PlannedTripResponse> getTripsByBusiness(Long userId){
+        log.info("getTripsByBusiness() | userId={}", userId);
+
         SnapUser user = userService.getUserById(userId);
         Business business = businessService.getBusinessOfUser(user);
 
-        if (business == null) {
-            log.error("No business found for user | userId={}", userId);
+        if(business == null){
+            log.error("No business found for userId={}", userId);
             throw new ResourceNotFoundException("There is no business owned to this user");
         }
 
@@ -143,28 +140,14 @@ public class TripPlanManagementService {
                 .toList();
     }
 
-    public List<PlannedTripResponse> getAvailableTrips(Long userId) {
-        log.info("Fetching available trips | userId={}", userId);
-        userService.getUserById(userId);
-        return plannedTripService.getPlannedTrips()
-                .stream()
-                .map(PlannedTripResponse::new)
-                .toList();
-    }
+    public PlannedTripResponse closeTrip(String reference, Long userId){
+        log.info("closeTrip() | reference={}, userId={}", reference, userId);
 
-    public PlannedTripResponse getTrip(String reference, Long userId) {
-        log.info("Fetching trip | reference={}, userId={}", reference, userId);
-        userService.getUserById(userId);
-        return new PlannedTripResponse(plannedTripService.getPlannedTrip(reference));
-    }
-
-    public PlannedTripResponse closeTrip(String reference, Long userId) {
-        log.info("Closing trip | reference={}, userId={}", reference, userId);
         SnapUser user = userService.getUserById(userId);
         Business business = businessService.getBusinessOfUser(user);
 
-        if (business == null) {
-            log.error("User has no business | userId={}", userId);
+        if(business == null){
+            log.error("No business found while closing trip");
             throw new ResourceNotFoundException("There is no business owned to this user");
         }
 
@@ -174,22 +157,24 @@ public class TripPlanManagementService {
                 business.getCode()
         );
 
-        log.info("Trip closed successfully | reference={}", reference);
+        log.info("Trip closed | reference={}", reference);
         return new PlannedTripResponse(trip);
     }
 
     @Transactional(rollbackOn = Exception.class)
     public DeliveryRequestCreationResponse acceptTripOffer(String reference, Long userId) {
-        log.info("Accepting trip offer | reference={}, userId={}", reference, userId);
+        log.info("acceptTripOffer() | reference={}, userId={}", reference, userId);
 
         SnapUser user = userService.getUserById(userId);
         PlannedTripOffer offer = tripOfferService.accept(reference, user);
 
-        log.debug("Trip offer accepted | offerRef={}, status={}", offer.getReference(), offer.getStatus());
+        log.debug("Trip offer accepted");
 
-        DeliveryRequest deliveryRequest = createDeliveryRequestFromTripOffer(user, offer);
+        DeliveryRequest deliveryRequest =
+                createDeliveryRequestFromTripOffer(user, offer);
 
-        log.info("Delivery request created from offer | trackingId={}", deliveryRequest.getTrackingId());
+        log.info("Delivery request created | trackingId={}",
+                deliveryRequest.getTrackingId());
 
         return DeliveryRequestCreationResponse.builder()
                 .status(deliveryRequest.getStatus())
@@ -197,65 +182,87 @@ public class TripPlanManagementService {
                 .build();
     }
 
-    private DeliveryRequest createDeliveryRequestFromTripOffer(SnapUser user, PlannedTripOffer offer) {
-        log.info("Creating delivery request from trip offer | offerRef={}", offer.getReference());
+    public TripOfferResponse makeOffer(String reference, Long amount, Long userId){
+        log.info("makeOffer() | reference={}, amount={}, userId={}",
+                reference, amount, userId);
 
-        DeliveryRequest deliveryRequest = requestService.createRequest(
-                RequestCreationDto.builder()
-                        .additionalNote(offer.getAdditionalNote())
-                        .deliveryFrequency(DeliveryFrequency.ONCE)
-                        .description(offer.getDescription())
-                        .destinationLocation(offer.getDestinationLocation())
-                        .pickupLocation(offer.getPickupLocation())
-                        .recipientName(offer.getRecipientName())
-                        .weight(offer.getWeight())
-                        .recipientNumber(offer.getRecipientNumber())
-                        .user(user)
-                        .sendType(SendType.SCHEDULED)
-                        .vehicleType(offer.getTrip().getVehicle().getType())
-                        .worth(offer.getWorth())
-                        .startTime(offer.getTrip().getTripDate().atTime(LocalTime.now()))
-                        .endTime(offer.getTrip().getTripDate().atTime(LocalTime.now()))
-                        .calculatedFee(offer.getUserProposedFee())
-                        .build()
-        );
+        if(amount < 0){
+            log.error("Invalid offer amount");
+            throw new FailedProcessException("Offer amount must be valid");
+        }
+
+        SnapUser user = userService.getUserById(userId);
+        Business business = businessService.getBusinessOfUser(user);
+        PlannedTripOffer tripOffer = tripOfferService.get(reference);
+
+        if(business != null &&
+                business.getCode().equalsIgnoreCase(
+                        tripOffer.getTrip().getBusiness().getCode())){
+
+            tripOffer = tripOfferService.setRiderOffer(
+                    tripOffer.getReference(), amount);
+
+            log.debug("Rider offer updated | status={}", tripOffer.getStatus());
+
+            if(TripOfferStatus.ACCEPTED.equals(tripOffer.getStatus())){
+                createDeliveryRequestFromTripOffer(
+                        tripOffer.getUser(), tripOffer);
+            } else {
+                notificationService.send(
+                        AddAppNotificationDto.builder()
+                                .title(NotificationTitle.DELIVERY)
+                                .message("There is an update to your delivery request")
+                                .uid(tripOffer.getUser().getIdentifier())
+                                .taskId(tripOffer.getTrip().getReference())
+                                .task(NotificationTask.PLANNED_TRIP.name())
+                                .build()
+                );
+            }
+            return new TripOfferResponse(tripOffer);
+        }
+
+        log.error("Trip not found or unauthorized");
+        throw new ResourceNotFoundException("Trip not found for this user");
+    }
+
+    private DeliveryRequest createDeliveryRequestFromTripOffer(
+            SnapUser user, PlannedTripOffer offer){
+
+        log.info("createDeliveryRequestFromTripOffer()");
+
+        DeliveryRequest deliveryRequest =
+                requestService.createRequest(
+                        RequestCreationDto.builder()
+                                .additionalNote(offer.getAdditionalNote())
+                                .deliveryFrequency(DeliveryFrequency.ONCE)
+                                .description(offer.getDescription())
+                                .destinationLocation(offer.getDestinationLocation())
+                                .pickupLocation(offer.getPickupLocation())
+                                .recipientName(offer.getRecipientName())
+                                .weight(offer.getWeight())
+                                .recipientNumber(offer.getRecipientNumber())
+                                .user(user)
+                                .sendType(SendType.SCHEDULED)
+                                .vehicleType(offer.getTrip().getVehicle().getType())
+                                .worth(offer.getWorth())
+                                .startTime(offer.getTrip().getTripDate().atTime(LocalTime.now()))
+                                .endTime(offer.getTrip().getTripDate().atTime(LocalTime.now()))
+                                .calculatedFee(offer.getUserProposedFee())
+                                .build()
+                );
 
         deliveryRequest = requestService.assignToTrip(offer, deliveryRequest);
-        log.debug("Delivery request assigned to trip | trackingId={}", deliveryRequest.getTrackingId());
+        log.debug("Delivery request assigned to trip");
 
-        String msg;
         try {
             pendingPaymentService.create(deliveryRequest);
             walletManagementService.startRequestPayment(deliveryRequest);
             pendingPaymentService.markPaid(deliveryRequest);
-            msg = "Your trip offer has just been accepted and account credited";
-            log.info("Payment completed successfully | trackingId={}", deliveryRequest.getTrackingId());
+            log.info("Payment completed");
         } catch (Exception e) {
-            log.error("Payment processing failed | trackingId={}", deliveryRequest.getTrackingId(), e);
-            msg = "Your trip offer has just been accepted. Awaiting Payment";
+            log.error("Payment processing failed", e);
         }
 
-        notificationService.send(
-                AddAppNotificationDto.builder()
-                        .message(msg)
-                        .title(NotificationTitle.DELIVERY)
-                        .uid(deliveryRequest.getBusinessUserId())
-                        .task(NotificationTask.RIDER_DELIVERY.name())
-                        .taskId(deliveryRequest.getTrackingId())
-                        .build()
-        );
-
-        notificationService.send(
-                AddAppNotificationDto.builder()
-                        .message("An order has been created for your trip offer")
-                        .title(NotificationTitle.DELIVERY)
-                        .uid(deliveryRequest.getUser().getIdentifier())
-                        .task(NotificationTask.USER_DELIVERY.name())
-                        .taskId(deliveryRequest.getTrackingId())
-                        .build()
-        );
-
-        log.info("Delivery request fully processed | trackingId={}", deliveryRequest.getTrackingId());
         return deliveryRequest;
     }
 }
