@@ -10,6 +10,7 @@ import com.snappapp.snapng.snap.data_lib.enums.VehicleType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,4 +27,6 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
     List<DeliveryRequest> findByStatusInAndActiveTrue(List<DeliveryRequestStatus> statuses);
     List<DeliveryRequest> findByStatusInAndSendTypeInAndActiveTrue(List<DeliveryRequestStatus> statuses, List<SendType> sendTypes);
     List<DeliveryRequest> findByStatusInAndSendTypeInAndVehicleTypeInAndActiveTrueOrderByIdDesc(List<DeliveryRequestStatus> statuses, List<SendType> sendTypes, List<VehicleType> vehicleTypes);
+
+    Long countByCreatedAtBetween(LocalDateTime localDateTime, LocalDateTime localDateTime1);
 }

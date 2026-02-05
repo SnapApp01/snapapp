@@ -3,6 +3,7 @@ package com.snappapp.snapng.snap.admin.controller;
 import com.snappapp.snapng.snap.admin.apimodels.EnableIdRequest;
 import com.snappapp.snapng.snap.admin.apimodels.VehicleApiResponse;
 import com.snappapp.snapng.snap.admin.config.MockData;
+import com.snappapp.snapng.snap.admin.services.AdminVehicleService;
 import com.snappapp.snapng.snap.api_lib.exceptions.ApiResponseCode;
 import com.snappapp.snapng.snap.api_lib.exceptions.SnapApiException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,33 +18,28 @@ import java.util.List;
 @RequestMapping("api/v1/admin/vehicles")
 @RestController
 public class VehicleController {
-    @Autowired
-    private MockData mockData;
+    private final AdminVehicleService service;
+
+    public VehicleController(AdminVehicleService service) {
+        this.service = service;
+    }
 
     @GetMapping
-    public Page<VehicleApiResponse> getVehicles(@RequestParam(value = "page",defaultValue = "0")Integer page,
-                                                @RequestParam(value = "size",defaultValue = "5")Integer size,
-                                                @RequestParam(value = "plateNumber", required = false)String plateNumber){
-        List<VehicleApiResponse> ls = new ArrayList<>();
-        mockData.getVehicleList().forEach((k,v)-> ls.add(v));
-        return new PageImpl<>(ls.subList(page,Math.min(size,ls.size())), PageRequest.of(page,size),mockData.getVehicleList().size());
+    public Page<VehicleApiResponse> getVehicles(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "5") Integer size,
+            @RequestParam(required = false) String plateNumber) {
+
+        return service.getAll(page, size, plateNumber);
     }
 
     @GetMapping("/{id}")
-    public VehicleApiResponse getVehicle(@PathVariable("id") String id) throws SnapApiException {
-        VehicleApiResponse rsp = mockData.getVehicleList().get(id);
-        if(rsp!=null){
-            return rsp;
-        }
-        throw new SnapApiException("Vehicle not found", ApiResponseCode.ITEM_NOT_FOUND);
+    public VehicleApiResponse getVehicle(@PathVariable Long id) {
+        return service.getById(id);
     }
 
     @PutMapping("/status")
-    public void changeVehicleStatus(@RequestBody EnableIdRequest request)throws SnapApiException {
-        VehicleApiResponse rsp = mockData.getVehicleList().get(request.getId());
-        if(rsp==null){
-            throw new SnapApiException("User with userid not found", ApiResponseCode.ITEM_NOT_FOUND);
-        }
-        rsp.setEnabled(request.isEnabled());
+    public void changeVehicleStatus(@RequestBody EnableIdRequest request) {
+        service.changeStatus(request);
     }
 }

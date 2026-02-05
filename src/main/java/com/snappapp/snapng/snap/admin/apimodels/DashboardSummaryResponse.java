@@ -7,8 +7,8 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class DashboardSummaryResponse {
-    private Integer userCount;
-    private Integer partnerCount;
-    private Integer vehicleCount;
-    private Integer requestCount;
+    private Long userCount;
+    private Long partnerCount;
+    private Long vehicleCount;
+    private Long requestCount;
 }

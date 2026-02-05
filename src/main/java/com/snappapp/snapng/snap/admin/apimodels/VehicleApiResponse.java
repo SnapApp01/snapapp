@@ -1,5 +1,6 @@
 package com.snappapp.snapng.snap.admin.apimodels;
 
+import com.snappapp.snapng.snap.data_lib.entities.Vehicle;
 import lombok.*;
 
 @Data

@@ -7,5 +7,5 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class IdRequest {
-    private String id;
+    private Long id;
 }

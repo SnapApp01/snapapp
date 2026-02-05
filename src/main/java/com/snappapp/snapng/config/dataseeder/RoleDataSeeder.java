@@ -25,7 +25,7 @@ public class RoleDataSeeder {
     @EventListener
     @Transactional
     public void seedInitialRoles(ContextRefreshedEvent event) {
-        List<String> defaultRoles = List.of("SNAP_USER", "ROLE_ADMIN", "ROLE_DRIVER");
+        List<String> defaultRoles = List.of("SNAP_USER", "ROLE_ADMIN", "SUPER_ADMIN", "ROLE_DRIVER");
 
         for (String roleName : defaultRoles) {
             if (!roleRepository.existsByRoleName(roleName)) {

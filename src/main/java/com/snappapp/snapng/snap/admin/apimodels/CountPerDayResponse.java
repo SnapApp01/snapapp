@@ -9,6 +9,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Builder
 public class CountPerDayResponse {
-    private Integer count;
+    private Long count;
     private LocalDate date;
 }
