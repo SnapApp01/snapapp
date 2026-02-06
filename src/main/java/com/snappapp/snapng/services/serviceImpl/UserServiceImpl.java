@@ -10,6 +10,7 @@ import com.snappapp.snapng.exceptions.UserNotFoundException;
 import com.snappapp.snapng.models.Media;
 import com.snappapp.snapng.services.MediaService;
 import com.snappapp.snapng.services.UserService;
+import com.snappapp.snapng.snap.admin.apimodels.UserAdminResponse;
 import com.snappapp.snapng.snap.data_lib.entities.SnapUser;
 import com.snappapp.snapng.snap.data_lib.repositories.SnapUserRepository;
 import com.snappapp.snapng.snap.data_lib.service.BusinessService;
@@ -48,7 +49,10 @@ public class UserServiceImpl implements UserService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<SnapUser> users = userRepository.findAll(pageable);
 
-        return new GenericResponse("Users fetched successfully", HttpStatus.OK, users);
+        Page<UserAdminResponse> result =
+                users.map(UserAdminResponse::new);
+
+        return new GenericResponse("Users fetched successfully", HttpStatus.OK, result);
     }
 
     @Override
