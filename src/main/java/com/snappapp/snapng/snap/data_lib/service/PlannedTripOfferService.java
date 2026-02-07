@@ -15,5 +15,5 @@ public interface PlannedTripOfferService {
     PlannedTripOffer setRiderOffer(String reference,Long offer);
     PlannedTripOffer reject(String reference);
     PlannedTripOffer get(String reference);
-    PlannedTripOffer accept(String reference,SnapUser user);
+    PlannedTripOffer accept(String reference,Long userId);
 }

@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 public interface PlannedTripOfferRepository extends JpaRepository<PlannedTripOffer,Long> {
-    Optional<PlannedTripOffer> findByReferenceAndUser(String reference, SnapUser user);
+    Optional<PlannedTripOffer> findByReferenceAndUser_Id(String reference, Long userId);
     Optional<PlannedTripOffer> findByTripAndUser(PlannedTrip trip, SnapUser user);
     Optional<PlannedTripOffer> findByReference(String reference);
     List<PlannedTripOffer> findByTrip(PlannedTrip trip);

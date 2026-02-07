@@ -104,8 +104,8 @@ public class PlannedTripOfferServiceImpl implements PlannedTripOfferService {
     }
 
     @Override
-    public PlannedTripOffer accept(String reference,SnapUser user) {
-        PlannedTripOffer tripOffer = repo.findByReferenceAndUser(reference,user).orElseThrow(() -> new ResourceNotFoundException("Trip offer not found"));
+    public PlannedTripOffer accept(String reference,Long userId) {
+        PlannedTripOffer tripOffer = repo.findByReferenceAndUser_Id(reference, userId).orElseThrow(() -> new ResourceNotFoundException("Trip offer not found"));
         if(PlannedTripStatus.CLOSED.equals(tripOffer.getTrip().getStatus())){
             throw new FailedProcessException("Trip is already closed");
         }

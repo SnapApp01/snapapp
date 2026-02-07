@@ -187,7 +187,7 @@ public class TripPlanManagementService {
         log.info("acceptTripOffer() | reference={}, userId={}", reference, userId);
 
         SnapUser user = userService.getUserById(userId);
-        PlannedTripOffer offer = tripOfferService.accept(reference, user);
+        PlannedTripOffer offer = tripOfferService.accept(reference, userId);
 
         DeliveryRequest deliveryRequest =
                 createDeliveryRequestFromTripOffer(user, offer);
