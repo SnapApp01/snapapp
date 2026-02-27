@@ -1,5 +1,6 @@
 package com.snappapp.snapng.snap.app_service.services;
 
+import com.snappapp.snapng.enums.NotificationType;
 import com.snappapp.snapng.exceptions.FailedProcessException;
 import com.snappapp.snapng.exceptions.ResourceNotFoundException;
 import com.snappapp.snapng.snap.app_service.apimodels.*;
@@ -124,6 +125,7 @@ public class TripPlanManagementService {
                         .title(NotificationTitle.DELIVERY)
                         .uid(e.getIdentifier())
                         .task(NotificationTask.PLANNED_TRIP.name())
+                        .notificationType(NotificationType.USER)
                         .taskId(reference)
                         .build()
         ));
@@ -294,6 +296,7 @@ public class TripPlanManagementService {
                                 .uid(tripOffer.getUser().getIdentifier())
                                 .taskId(tripOffer.getTrip().getReference())
                                 .task(NotificationTask.PLANNED_TRIP.name())
+                                .notificationType(NotificationType.USER)
                                 .build()
                 );
             }
@@ -365,13 +368,14 @@ public class TripPlanManagementService {
                                 .getIdentifier())
                         .taskId(tripOffer.getTrip().getReference())
                         .task(NotificationTask.PLANNED_TRIP_RIDER.name())
+                        .notificationType(NotificationType.DRIVER)
                         .build()
         );
 
         return new TripOfferResponse(tripOffer);
     }
-
-    private DeliveryRequest createDeliveryRequestFromTripOffer(
+    @Transactional
+    public DeliveryRequest createDeliveryRequestFromTripOffer(
             SnapUser user, PlannedTripOffer offer){
 
         log.info("createDeliveryRequestFromTripOffer()");
@@ -401,7 +405,6 @@ public class TripPlanManagementService {
                                 .calculatedFee(offer.getUserProposedFee())
                                 .build()
                 );
-
         deliveryRequest = requestService.assignToTrip(offer, deliveryRequest);
 
         try {
@@ -419,6 +422,7 @@ public class TripPlanManagementService {
                         .title(NotificationTitle.DELIVERY)
                         .uid(deliveryRequest.getBusinessUserId())
                         .task(NotificationTask.RIDER_DELIVERY.name())
+                        .notificationType(NotificationType.DRIVER)
                         .taskId(deliveryRequest.getTrackingId())
                         .build()
         );
@@ -429,6 +433,7 @@ public class TripPlanManagementService {
                         .title(NotificationTitle.DELIVERY)
                         .uid(deliveryRequest.getUser().getIdentifier())
                         .task(NotificationTask.USER_DELIVERY.name())
+                        .notificationType(NotificationType.USER)
                         .taskId(deliveryRequest.getTrackingId())
                         .build()
         );

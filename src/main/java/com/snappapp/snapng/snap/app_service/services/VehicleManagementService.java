@@ -133,49 +133,4 @@ public class VehicleManagementService {
 
         throw new FailedProcessException("Vehicle is not owned by this business");
     }
-
-
-
-//    public VehicleRetrievalResponse getVehicle(String vehicleId, Long userId) {
-//        SnapUser user = userService.getUserById(userId);
-//        Business business = businessService.getBusinessOfUser(user);
-//        if(business==null){
-//            throw new FailedProcessException("Only businesses have vehicles");
-//        }
-//        Vehicle vehicle = vehicleService.getVehicle(vehicleId);
-//        if(vehicle.getBusiness().getCode().equalsIgnoreCase(business.getCode())){
-//            return VehicleRetrievalResponse.builder().vehicle(vehicle).build();
-//        }
-//        throw new FailedProcessException("Vehicle is not owned by this business");
-//    }
-//
-//    public VehicleRetrievalResponse addVehicle(AddVehicleRequest request, Long userId) {
-//        SnapUser user = userService.getUserById(userId);
-//        Business business = businessService.getBusinessOfUser(user);
-//        if(business==null){
-//            throw new FailedProcessException("Only businesses can have vehicles");
-//        }
-//        Vehicle vehicle = vehicleService.createVehicle(VehicleCreationDto
-//                .builder()
-//                .business(business)
-//                .description(request.getDescription())
-//                .plateNumber(request.getPlateNumber())
-//                .type(request.getVehicle())
-//                .year(request.getYear())
-//                .build());
-//        return VehicleRetrievalResponse.builder().vehicle(vehicle).build();
-//    }
-//
-//    public VehicleRetrievalResponse changeAvailability(String vehicleId, Long userId) {
-//        SnapUser user = userService.getUserById(userId);
-//        Business business = businessService.getBusinessOfUser(user);
-//        if(business==null){
-//            throw new FailedProcessException("Only businesses have vehicles");        }
-//        Vehicle vehicle = vehicleService.getVehicle(vehicleId);
-//        if(vehicle.getBusiness().getCode().equalsIgnoreCase(business.getCode())){
-//            vehicle = vehicleService.changeVehicleAvailability(vehicle,!vehicle.getAvailable());
-//            return VehicleRetrievalResponse.builder().vehicle(vehicle).build();
-//        }
-//        throw new FailedProcessException("Vehicle is not owned by this business");
-//    }
 }

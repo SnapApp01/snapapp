@@ -153,7 +153,6 @@ public class WalletTransferServiceImpl implements WalletTransferService {
         return saved;
     }
 
-
     @Override
     @Transactional
     public WalletTransfer completeTransfer(String transferRef) {
@@ -226,7 +225,6 @@ public class WalletTransferServiceImpl implements WalletTransferService {
 
         return saved;
     }
-
 
     @Override
     @Transactional(rollbackOn = Exception.class)

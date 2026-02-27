@@ -44,7 +44,6 @@ public class DeliveryRequestPendingPaymentServiceImpl implements DeliveryRequest
         return repo.findByStatus(PendingPaymentStatus.PENDING);
     }
 
-
     @Override
     public DeliveryRequestPendingPayment markPaid(DeliveryRequest request) {
         Optional<DeliveryRequestPendingPayment> opt = repo.findByRequest(request);

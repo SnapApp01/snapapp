@@ -1,6 +1,7 @@
 package com.snappapp.snapng.snap.app_service.services;
 
 import com.google.api.client.util.Strings;
+import com.snappapp.snapng.enums.NotificationType;
 import com.snappapp.snapng.exceptions.FailedProcessException;
 import com.snappapp.snapng.exceptions.ResourceNotFoundException;
 import com.snappapp.snapng.models.baseclass.BaseEntity;
@@ -139,6 +140,7 @@ public class DeliveryRequestManagementService {
                         .message("There is a new delivery request. Check it out and make a bid.")
                         .uid(snapUser.getIdentifier())
                         .task(NotificationTask.RIDER_DELIVERY_PROPOSAL.name())
+                        .notificationType(NotificationType.DRIVER)
                         .taskId(trackingId)
                         .title(NotificationTitle.DELIVERY)
                         .build());
@@ -423,6 +425,7 @@ public class DeliveryRequestManagementService {
                     .message("Delivery has been completed, funds have been released successfully")
                     .uid(request.getBusinessUserId())
                     .task(NotificationTask.RIDER_DELIVERY.name())
+                    .notificationType(NotificationType.DRIVER)
                     .taskId(request.getTrackingId())
                     .title(NotificationTitle.DELIVERY)
                     .build());
@@ -459,6 +462,7 @@ public class DeliveryRequestManagementService {
                 notificationService.send(AddAppNotificationDto.builder()
                         .message("Delivery request has been canceled by user.")
                         .uid(request.getBusinessUserId())
+                        .notificationType(NotificationType.DRIVER)
                         .title(NotificationTitle.DELIVERY)
                         .build());
             }
@@ -492,6 +496,7 @@ public class DeliveryRequestManagementService {
             notificationService.send(AddAppNotificationDto.builder()
                     .message("Your bid has been canceled as order is no longer available")
                     .uid(proposal.getBusinessUserId())
+                    .notificationType(NotificationType.DRIVER)
                     .title(NotificationTitle.DELIVERY)
                     .build());
         }
@@ -592,6 +597,7 @@ public class DeliveryRequestManagementService {
                 .message(message)
                 .taskId(request.getTrackingId())
                 .task(NotificationTask.USER_DELIVERY.name())
+                .notificationType(NotificationType.USER)
                 .build());
 
         return DeliveryRequestRetrievalResponse.builder()

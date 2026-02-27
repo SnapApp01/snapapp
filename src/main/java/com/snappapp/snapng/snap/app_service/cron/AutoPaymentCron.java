@@ -1,5 +1,6 @@
 package com.snappapp.snapng.snap.app_service.cron;
 
+import com.snappapp.snapng.enums.NotificationType;
 import com.snappapp.snapng.snap.app_service.services.PushNotificationService;
 import com.snappapp.snapng.snap.app_service.services.WalletManagementService;
 import com.snappapp.snapng.snap.data_lib.dtos.AddAppNotificationDto;
@@ -50,6 +51,7 @@ public class AutoPaymentCron {
                         .title(NotificationTitle.DELIVERY)
                         .uid(payment.getRequest().getBusinessUserId())
                         .task(NotificationTask.RIDER_DELIVERY.name())
+                        .notificationType(NotificationType.DRIVER)
                         .taskId(payment.getRequest().getTrackingId())
                         .build());
                 notificationService.send(AddAppNotificationDto.builder()
@@ -57,6 +59,7 @@ public class AutoPaymentCron {
                         .title(NotificationTitle.DELIVERY)
                         .uid(payment.getRequest().getUser().getIdentifier())
                         .task(NotificationTask.USER_DELIVERY.name())
+                        .notificationType(NotificationType.USER)
                         .taskId(payment.getRequest().getTrackingId())
                         .build());
             }

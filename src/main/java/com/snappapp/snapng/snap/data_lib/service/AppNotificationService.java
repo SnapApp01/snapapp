@@ -1,6 +1,7 @@
 package com.snappapp.snapng.snap.data_lib.service;
 
 import com.snappapp.snapng.enums.NotificationOwnerType;
+import com.snappapp.snapng.enums.NotificationType;
 import com.snappapp.snapng.snap.data_lib.dtos.AddAppNotificationDto;
 import com.snappapp.snapng.snap.data_lib.entities.AppNotification;
 import org.springframework.stereotype.Component;
@@ -18,4 +19,16 @@ public interface AppNotificationService {
     List<AppNotification> getPending(int size);
     void updateSentAt(List<Long> ids);
     void attempted(AppNotification pn);
+
+    // NEW: Get notifications by UID (uses email/identifier)
+    List<AppNotification> getByUid(String uid);
+
+    // NEW: Get notifications by UID and type
+    List<AppNotification> getByUidAndType(String uid, NotificationType type);
+
+    // NEW: Get latest notification by UID and type
+    AppNotification getLatestByType(String uid, NotificationType type);
+
+    // NEW: Count unread notifications by type
+    long countUnreadByType(String uid, NotificationType type);
 }

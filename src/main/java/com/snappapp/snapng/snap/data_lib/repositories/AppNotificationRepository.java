@@ -1,6 +1,7 @@
 package com.snappapp.snapng.snap.data_lib.repositories;
 
 import com.google.api.client.googleapis.notifications.TypedNotification;
+import com.snappapp.snapng.enums.NotificationType;
 import com.snappapp.snapng.snap.data_lib.entities.AppNotification;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,27 @@ public interface AppNotificationRepository extends JpaRepository<AppNotification
     @Modifying
     @Transactional
     void updateNotificationToRead(@Param("ref")String ref);
+
+    // NEW: Find notifications by UID and type
+    Page<AppNotification> findByUidAndNotificationTypeAndArchivedFalse(
+            String uid,
+            NotificationType notificationType,
+            Pageable pageable
+    );
+
+    // NEW: Find latest notification by UID and type
+    Optional<AppNotification> findFirstByUidAndNotificationTypeAndArchivedFalseOrderByIdDesc(
+            String uid,
+            NotificationType notificationType
+    );
+
+    // NEW: Count unread notifications by type
+    @Query("SELECT COUNT(n) FROM AppNotification n WHERE n.uid = :uid " +
+            "AND n.notificationType = :notificationType AND n.archived = false")
+    long countUnreadByTypeAndUid(
+            @Param("uid") String uid,
+            @Param("notificationType") NotificationType notificationType
+    );
 
     Page<AppNotification> findBySentAtIsNullAndAttemptLessThanOrderByAttemptAsc(int max,Pageable pageable);
     @Modifying

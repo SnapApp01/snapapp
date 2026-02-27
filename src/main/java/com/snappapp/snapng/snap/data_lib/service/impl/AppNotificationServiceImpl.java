@@ -1,6 +1,7 @@
 package com.snappapp.snapng.snap.data_lib.service.impl;
 
 import com.snappapp.snapng.enums.NotificationOwnerType;
+import com.snappapp.snapng.enums.NotificationType;
 import com.snappapp.snapng.snap.data_lib.dtos.AddAppNotificationDto;
 import com.snappapp.snapng.snap.data_lib.entities.AppNotification;
 import com.snappapp.snapng.snap.data_lib.entities.Business;
@@ -31,23 +32,6 @@ public class AppNotificationServiceImpl implements AppNotificationService {
         this.userService = userService;
         this.businessService = businessService;
     }
-
-//    @Override
-//    public List<AppNotification> get(Long id) {
-//        return repo.findByIdAndArchivedFalse(id, PageRequest.of(0,20, Sort.Direction.DESC,"id")).getContent();
-//    }
-
-//    @Override
-//    public List<AppNotification> get(Long userId) {
-//        SnapUser user = userService.findById(userId);
-//
-//        return repo
-//                .findByUidAndArchivedFalse(
-//                        user.getIdentifier(),
-//                        PageRequest.of(0, 20, Sort.Direction.DESC, "createdAt")
-//                )
-//                .getContent();
-//    }
 
     @Override
     public List<AppNotification> get(Long userId, NotificationOwnerType ownerType) {
@@ -80,10 +64,32 @@ public class AppNotificationServiceImpl implements AppNotificationService {
         ).getContent();
     }
 
+    @Override
+    public List<AppNotification> getByUid(String uid) {
+        return repo.findByUidAndArchivedFalse(uid,
+                PageRequest.of(0, 20, Sort.Direction.DESC, "id")).getContent();
+    }
+
+    @Override
+    public List<AppNotification> getByUidAndType(String uid, NotificationType type) {
+        return repo.findByUidAndNotificationTypeAndArchivedFalse(uid, type,
+                PageRequest.of(0, 20, Sort.Direction.DESC, "id")).getContent();
+    }
 
     @Override
     public AppNotification getLatest(String uid) {
         return repo.findFirstByUidAndArchivedFalseOrderByIdDesc(uid).orElse(null);
+    }
+
+    @Override
+    public AppNotification getLatestByType(String uid, NotificationType type) {
+        return repo.findFirstByUidAndNotificationTypeAndArchivedFalseOrderByIdDesc(uid, type)
+                .orElse(null);
+    }
+
+    @Override
+    public long countUnreadByType(String uid, NotificationType type) {
+        return repo.countUnreadByTypeAndUid(uid, type);
     }
 
     @Override
@@ -94,7 +100,16 @@ public class AppNotificationServiceImpl implements AppNotificationService {
         notification.setTitle(dto.getTitle().getTitle());
         notification.setTask(dto.getTask());
         notification.setTaskId(dto.getTaskId());
-        notification.setReference(IdUtilities.useDateTimeAtomic()+dto.getUid());
+        notification.setReference(IdUtilities.useDateTimeAtomic() + dto.getUid());
+
+        // Set notification type - defaults to USER if not specified
+        notification.setNotificationType(
+                dto.getNotificationType() != null ? dto.getNotificationType() : NotificationType.USER
+        );
+
+        log.debug("Saving notification - UID: {}, Type: {}, Task: {}",
+                dto.getUid(), notification.getNotificationType(), dto.getTask());
+
         return repo.save(notification);
     }
 

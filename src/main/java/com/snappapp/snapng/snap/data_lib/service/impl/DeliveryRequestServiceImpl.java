@@ -71,24 +71,6 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
         return repo.save(request);
     }
 
-//    @Override
-//    public DeliveryRequest assignToVehicleWithProposal(DeliveryPriceProposal proposal) {
-//        if(!FeeProposalStatus.ACCEPTED.equals(proposal.getStatus())){
-//            return proposal.getRequest();
-//        }
-//        DeliveryRequest request = proposal.getRequest();
-//        if(request.getVehicle()!=null || !DeliveryRequestStatus.NEW.equals(request.getStatus())){
-//            throw new DeliveryAlreadyAssignedException(String.format("Delivery request with tracking id %s already exist"));
-//        }
-//        request.setAgreedFee(proposal.getFee());
-//        request.setVehicle(proposal.getVehicle());
-//        request.setBusiness(proposal.getVehicle().getBusiness());
-//        request.getBusiness().getUsers();
-//        request.setBusinessUserId(request.getBusiness().getUsers().iterator().next().getIdentifier());
-//        request.setStatus(DeliveryRequestStatus.AWAITING_PAYMENT);
-//        return repo.save(request);
-//    }
-
     @Override
     public DeliveryRequest assignToVehicleWithProposal(DeliveryPriceProposal proposal) {
 
@@ -133,7 +115,6 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
         return repo.save(request);
     }
 
-
     @Override
     public DeliveryRequest assignToTrip(PlannedTripOffer offer, DeliveryRequest request) {
         if(!TripOfferStatus.ACCEPTED.equals(offer.getStatus())){
@@ -150,7 +131,6 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
         request.setStatus(DeliveryRequestStatus.AWAITING_PAYMENT);
         return repo.save(request);
     }
-
 
     @Override
     public DeliveryRequest get(String trackingId) {

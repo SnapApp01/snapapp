@@ -1,5 +1,6 @@
 package com.snappapp.snapng.snap.app_service.services;
 
+import com.snappapp.snapng.enums.NotificationType;
 import com.snappapp.snapng.enums.WalletType;
 import com.snappapp.snapng.snap.app_service.apimodels.*;
 import com.snappapp.snapng.snap.data_lib.dtos.AddAppNotificationDto;
@@ -73,13 +74,6 @@ public class WalletManagementService {
                 .getAll(walletKey, page, size)
                 .map(WalletTransactionResponse::new);
     }
-
-//    public Page<WalletTransactionResponse> getTransactions(Long uid, int page, int size){
-//        SnapUser user = userService.withWallet(uid);
-//        Business business = businessService.getBusinessOfUser(user);
-//        String walletKey =  business==null ? user.getWalletKey() : business.getWalletKey();
-//        return walletTransactionService.getAll(walletKey, page,size).map(WalletTransactionResponse::new);
-//    }
 
     @Transactional
     public void startRequestPayment(DeliveryRequest request){
@@ -206,6 +200,7 @@ public class WalletManagementService {
             notificationService.send(AddAppNotificationDto.builder()
                             .title(NotificationTitle.TRANSACTION)
                             .task(NotificationTask.USER_TRANSACTION.name())
+                            .notificationType(NotificationType.USER)
                             .taskId(transaction.getReference())
                             .message(String.format("Your wallet has just been credited with ₦%.2f. Your wallet balance is now ₦%.2f",
                                     MoneyUtilities.fromMinorToBigDecimal(data.getAmount()).doubleValue(),MoneyUtilities.fromMinorToBigDecimal(creditWallet.getBookBalance()).doubleValue()))
@@ -228,6 +223,7 @@ public class WalletManagementService {
         notificationService.send(AddAppNotificationDto.builder()
                 .title(NotificationTitle.TRANSACTION)
                 .task(NotificationTask.RIDER_TRANSACTION.name())
+                .notificationType(NotificationType.DRIVER)
                 .taskId(wallet.getName())
                 .message(String.format("Your wallet has just been debited with ₦%.2f. Your wallet balance is now ₦%.2f",
                         MoneyUtilities.fromMinorToBigDecimal(request.getAmount()).doubleValue(),MoneyUtilities.fromMinorToBigDecimal(creditWallet.getBookBalance()).doubleValue()))

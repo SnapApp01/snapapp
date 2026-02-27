@@ -218,7 +218,6 @@ public class SnapUserServiceImpl implements SnapUserService {
                 .build();
     }
 
-
     private void validateEmail(String email, String existsMessage) {
         if (email == null || email.trim().isEmpty()) {
             throw new InvalidCredentialsException("Provide valid email...");

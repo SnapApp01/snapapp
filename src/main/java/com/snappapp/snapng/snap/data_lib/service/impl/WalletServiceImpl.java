@@ -156,7 +156,6 @@ public class WalletServiceImpl implements WalletService {
                 walletKey, wallet.getAvailableBalance(), wallet.getBookBalance());
     }
 
-
     /**
      * book -> remove   (user side escrow consumption)
      */
@@ -176,7 +175,6 @@ public class WalletServiceImpl implements WalletService {
         log.info("[WALLET_BOOK_CREDIT_DONE] wallet={}, bookAfter={}",
                 walletKey, wallet.getBookBalance());
     }
-
 
     /**
      * book -> available   (recipient settlement)
