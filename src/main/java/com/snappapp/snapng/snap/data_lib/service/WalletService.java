@@ -35,4 +35,8 @@ public interface WalletService {
     void debitBook(String walletKey, Long amount);
 
     void bookToAvailable(String walletKey, Long amount);
+
+    void debitAvailable(String recipientWalletKey, Long serviceFee);
+
+    void creditAvailable(String adminWalletKey, Long serviceFee);
 }

@@ -36,6 +36,15 @@ public class PushNotificationService {
         this.userService = userService;
         this.appNotificationService = appNotificationService;
     }
+    @PostConstruct
+    public void testFirebase() {
+        try {
+            FirebaseMessaging.getInstance();
+            log.info("✅ SNAPAPP: Firebase Messaging ready");
+        } catch (Exception e) {
+            log.error("❌ SNAPAPP: Firebase Messaging not ready", e);
+        }
+    }
 
     @PostConstruct
     public void init(){

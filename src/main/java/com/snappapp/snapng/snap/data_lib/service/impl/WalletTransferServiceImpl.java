@@ -4,10 +4,12 @@ import com.snappapp.snapng.exceptions.FailedProcessException;
 import com.snappapp.snapng.exceptions.ResourceNotFoundException;
 import com.snappapp.snapng.snap.data_lib.dtos.CreateWalletTransactionDto;
 import com.snappapp.snapng.snap.data_lib.dtos.CreateWalletTransferDto;
+import com.snappapp.snapng.snap.data_lib.entities.PlatformSetting;
 import com.snappapp.snapng.snap.data_lib.entities.Wallet;
 import com.snappapp.snapng.snap.data_lib.entities.WalletTransaction;
 import com.snappapp.snapng.snap.data_lib.entities.WalletTransfer;
 import com.snappapp.snapng.snap.data_lib.enums.TransferStatus;
+import com.snappapp.snapng.snap.data_lib.repositories.PlatformSettingRepository;
 import com.snappapp.snapng.snap.data_lib.repositories.WalletTransferRepository;
 import com.snappapp.snapng.snap.data_lib.service.WalletService;
 import com.snappapp.snapng.snap.data_lib.service.WalletTransactionService;
@@ -17,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Service
@@ -25,11 +28,13 @@ public class WalletTransferServiceImpl implements WalletTransferService {
     private final WalletTransferRepository repo;
     private final WalletTransactionService transactionService;
     private final WalletService walletService;
+    private final PlatformSettingRepository platformSettingRepository;
 
-    public WalletTransferServiceImpl(WalletTransferRepository repo, WalletTransactionService transactionService, WalletService walletService) {
+    public WalletTransferServiceImpl(WalletTransferRepository repo, WalletTransactionService transactionService, WalletService walletService, PlatformSettingRepository platformSettingRepository) {
         this.repo = repo;
         this.transactionService = transactionService;
         this.walletService = walletService;
+        this.platformSettingRepository = platformSettingRepository;
     }
 
     @Override
@@ -170,23 +175,28 @@ public class WalletTransferServiceImpl implements WalletTransferService {
         log.info("[TRANSFER_COMPLETE_DETAILS] userWallet={}, recipientWallet={}, amount={}",
                 userWalletKey, recipientWalletKey, amount);
 
-        // 1. user book -> remove
-        walletService.debitBook(
-                userWalletKey,
-                amount
-        );
+        /*
+         * ===============================
+         * 1️⃣ Release Escrow
+         * ===============================
+         */
 
-        // 2. recipient book -> available
-        walletService.bookToAvailable(
-                recipientWalletKey,
-                amount
-        );
+        // 1. Debit user BOOK (escrow holding)
+        walletService.debitBook(userWalletKey, amount);
 
-        // 3. NOW create transactions
+        // 2. Move recipient BOOK -> AVAILABLE (driver gets paid)
+        walletService.bookToAvailable(recipientWalletKey, amount);
+
+        /*
+         * ===============================
+         * 2️⃣ Create Escrow Transactions
+         * ===============================
+         */
 
         Wallet userWallet = walletService.getByWalletKey(userWalletKey);
         Wallet recipientWallet = walletService.getByWalletKey(recipientWalletKey);
 
+        // Debit transaction (user escrow release)
         WalletTransaction userTx =
                 transactionService.startTransaction(
                         CreateWalletTransactionDto.builder()
@@ -200,6 +210,7 @@ public class WalletTransferServiceImpl implements WalletTransferService {
 
         transactionService.completeTransaction(userTx.getReference());
 
+        // Credit transaction (driver receives full amount)
         WalletTransaction recipientTx =
                 transactionService.startTransaction(
                         CreateWalletTransactionDto.builder()
@@ -213,6 +224,69 @@ public class WalletTransferServiceImpl implements WalletTransferService {
 
         transactionService.completeTransaction(recipientTx.getReference());
 
+        PlatformSetting setting = platformSettingRepository.findAll().get(0);
+
+        BigDecimal percent = setting.getDriverServiceFeePercent();
+
+        BigDecimal amountBD = BigDecimal.valueOf(amount);
+
+        Long serviceFee = amountBD
+                .multiply(percent)
+                .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP)
+                .longValue();
+
+        if (serviceFee > 0) {
+
+            String ADMIN_WALLET_KEY = "ADMIN_WALLET";
+
+            log.info("[SERVICE_FEE_CALCULATED] transferRef={}, percent={}, fee={}",
+                    transferRef, percent, serviceFee);
+
+            // 1️⃣ Deduct from driver AVAILABLE balance
+            walletService.debitAvailable(recipientWalletKey, serviceFee);
+
+            // 2️⃣ Credit ADMIN wallet
+            walletService.creditAvailable(ADMIN_WALLET_KEY, serviceFee);
+
+            // Driver DEBIT transaction (to show fee)
+            WalletTransaction feeDebitTx =
+                    transactionService.startTransaction(
+                            CreateWalletTransactionDto.builder()
+                                    .wallet(recipientWallet)
+                                    .amount(serviceFee)
+                                    .isDebit(true)
+                                    .narration("Service charge (" + percent + "%) for transfer " + transferRef)
+                                    .ref(transferRef + "-FEE-DB")
+                                    .build()
+                    );
+
+            transactionService.completeTransaction(feeDebitTx.getReference());
+
+            // Admin CREDIT transaction
+            Wallet adminWallet = walletService.getByWalletKey(ADMIN_WALLET_KEY);
+
+            WalletTransaction feeCreditTx =
+                    transactionService.startTransaction(
+                            CreateWalletTransactionDto.builder()
+                                    .wallet(adminWallet)
+                                    .amount(serviceFee)
+                                    .isDebit(false)
+                                    .narration("Service charge earned from transfer " + transferRef)
+                                    .ref(transferRef + "-FEE-CR")
+                                    .build()
+                    );
+
+            transactionService.completeTransaction(feeCreditTx.getReference());
+
+            log.info("[SERVICE_FEE_COMPLETED] transferRef={}, fee={}", transferRef, serviceFee);
+        }
+
+        /*
+         * ===============================
+         * 5️⃣ Finalize Transfer
+         * ===============================
+         */
+
         transfer.setDebitRef(userTx.getReference());
         transfer.setCreditRef(recipientTx.getReference());
         transfer.setDebitStatus(TransferStatus.COMPLETE);
@@ -222,9 +296,81 @@ public class WalletTransferServiceImpl implements WalletTransferService {
         WalletTransfer saved = repo.save(transfer);
 
         log.info("[TRANSFER_COMPLETE_DONE] transferRef={}", transferRef);
-
         return saved;
     }
+
+//    @Override
+//    @Transactional
+//    public WalletTransfer completeTransfer(String transferRef) {
+//
+//        log.info("[TRANSFER_COMPLETE_START] transferRef={}", transferRef);
+//
+//        WalletTransfer transfer = getTransfer(transferRef);
+//        incomplete(transfer);
+//
+//        Long amount = transfer.getAmount();
+//
+//        String userWalletKey = transfer.getDebitWallet();
+//        String recipientWalletKey = transfer.getCreditWallet();
+//
+//        log.info("[TRANSFER_COMPLETE_DETAILS] userWallet={}, recipientWallet={}, amount={}",
+//                userWalletKey, recipientWalletKey, amount);
+//
+//        // 1. user book -> remove
+//        walletService.debitBook(
+//                userWalletKey,
+//                amount
+//        );
+//
+//        // 2. recipient book -> available
+//        walletService.bookToAvailable(
+//                recipientWalletKey,
+//                amount
+//        );
+//
+//        // 3. NOW create transactions
+//
+//        Wallet userWallet = walletService.getByWalletKey(userWalletKey);
+//        Wallet recipientWallet = walletService.getByWalletKey(recipientWalletKey);
+//
+//        WalletTransaction userTx =
+//                transactionService.startTransaction(
+//                        CreateWalletTransactionDto.builder()
+//                                .wallet(userWallet)
+//                                .amount(amount)
+//                                .isDebit(true)
+//                                .narration("Escrow release for transfer " + transferRef)
+//                                .ref(transferRef + "-DB")
+//                                .build()
+//                );
+//
+//        transactionService.completeTransaction(userTx.getReference());
+//
+//        WalletTransaction recipientTx =
+//                transactionService.startTransaction(
+//                        CreateWalletTransactionDto.builder()
+//                                .wallet(recipientWallet)
+//                                .amount(amount)
+//                                .isDebit(false)
+//                                .narration("Escrow released for transfer " + transferRef)
+//                                .ref(transferRef + "-CR")
+//                                .build()
+//                );
+//
+//        transactionService.completeTransaction(recipientTx.getReference());
+//
+//        transfer.setDebitRef(userTx.getReference());
+//        transfer.setCreditRef(recipientTx.getReference());
+//        transfer.setDebitStatus(TransferStatus.COMPLETE);
+//        transfer.setCreditStatus(TransferStatus.COMPLETE);
+//        transfer.setCompletedAt(LocalDateTime.now());
+//
+//        WalletTransfer saved = repo.save(transfer);
+//
+//        log.info("[TRANSFER_COMPLETE_DONE] transferRef={}", transferRef);
+//
+//        return saved;
+//    }
 
     @Override
     @Transactional(rollbackOn = Exception.class)

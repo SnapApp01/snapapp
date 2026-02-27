@@ -223,4 +223,21 @@ public class WalletServiceImpl implements WalletService {
                 walletKey, wallet.getBookBalance(), wallet.getAvailableBalance());
     }
 
+    @Override
+    public void debitAvailable(String walletKey, Long amount) {
+        Wallet wallet = getByWalletKey(walletKey);
+
+        if (wallet.getAvailableBalance() < amount) {
+            throw new FailedProcessException("Insufficient available balance");
+        }
+        wallet.setAvailableBalance(wallet.getAvailableBalance() - amount);
+        repo.save(wallet);
+    }
+
+    @Override
+    public void creditAvailable(String walletKey, Long amount) {
+        Wallet wallet = getByWalletKey(walletKey);
+        wallet.setAvailableBalance(wallet.getAvailableBalance() + amount);
+        repo.save(wallet);
+    }
 }

@@ -41,12 +41,6 @@ public class WalletController {
         return service.getTransactions(user.getId(), walletType, page, size);
     }
 
-//    @GetMapping("/transactions")
-//    public List<WalletTransactionResponse> getTransactions(){
-//        SnapUser user = securityUtil.getCurrentLoggedInUser();
-//        return service.getTransactions(user.getId(), 0,50).getContent();
-//    }
-
     @PostMapping("/withdraw")
     public void withdraw(@Validated @RequestBody WithdrawalRequest request){
         SnapUser user = securityUtil.getCurrentLoggedInUser();
