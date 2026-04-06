@@ -13,6 +13,8 @@ import com.snappapp.snapng.snap.data_lib.service.BusinessService;
 import com.snappapp.snapng.snap.data_lib.service.SnapUserService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -93,5 +95,4 @@ public class UserDetailService {
                 .build());
         userService.addBusinessToUser(user,business);
     }
-
 }

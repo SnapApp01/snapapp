@@ -80,6 +80,14 @@ public UserDetailResponse updateBusinessOnlineStatus(
     return userDetailService.getUser(user.getId());
 }
 
+    @PutMapping("/device/{token}")
+    public ResponseEntity<SnapUser> updateDeviceKey(
+            @PathVariable String deviceKey) {
+        SnapUser loggedInUser = securityUtil.getCurrentLoggedInUser();
+        SnapUser user = snapUserService.withDeviceKey(loggedInUser.getEmail(), deviceKey);
+        return ResponseEntity.ok(user);
+    }
+
 //
 //    @PutMapping("/device/{token}")
 //    public void saveToken(@RequestHeader(Constants.HEADER_USER_ID) String userId,

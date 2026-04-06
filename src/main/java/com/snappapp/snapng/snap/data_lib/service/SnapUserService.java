@@ -20,7 +20,7 @@ public interface SnapUserService {
     SnapUser updateUser(SnapUser user);
     void addBusinessToUser(SnapUser user, Business business);
     SnapUser withWallet(Long id);
-    SnapUser withDeviceKey(String uid,String deviceKey);
+    SnapUser withDeviceKey(String email,String deviceKey);
     List<SnapUser> getUsers();
 
     GenericResponse createBusinessUser(CreateUserDetailWithBusinessRequest request);
