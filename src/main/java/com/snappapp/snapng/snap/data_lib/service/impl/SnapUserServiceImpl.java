@@ -118,13 +118,12 @@ public class SnapUserServiceImpl implements SnapUserService {
     }
 
     @Override
-    public SnapUser withDeviceKey(String uid,String deviceKey) {
-        repo.clearUsersWithSameDeviceToken(deviceKey,uid);
-        SnapUser user = getUserByEmail(uid);
+    public SnapUser withDeviceKey(String email, String deviceKey) {
+        repo.clearUsersWithSameDeviceToken(deviceKey, email);
+        SnapUser user = getUserByEmail(email);
         user.setDeviceToken(deviceKey);
         return repo.save(user);
     }
-
     @Override
     public List<SnapUser> getUsers() {
         return repo.findAllUsersNoBusiness();

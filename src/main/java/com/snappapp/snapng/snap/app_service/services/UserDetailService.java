@@ -111,7 +111,7 @@ public class UserDetailService {
 
     public GenericResponse createBusinessUser(@Valid CreateUserDetailWithBusinessRequest request) {
         SnapUser user = userService.createBusinessUser(request);
-        if(request instanceof CreateUserDetailWithBusinessRequest) {
+        if(request != null) {
             AddBusinessRequest addBusinessRequest = new AddBusinessRequest();
             addBusinessRequest.setCompanyName(((CreateUserDetailWithBusinessRequest) request).getBusinessName());
             addBusiness(addBusinessRequest,user);

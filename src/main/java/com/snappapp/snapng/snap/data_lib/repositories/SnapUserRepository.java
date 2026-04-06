@@ -23,8 +23,7 @@ public interface SnapUserRepository extends JpaRepository<SnapUser,Long> {
     Optional<SnapUser> findByIdentifierAndActiveTrue(String identifier);
     @Modifying
     @Transactional
-    @Query("UPDATE SnapUser u set u.deviceToken = null where u.deviceToken = :token AND u.identifier != :uid")
-    void clearUsersWithSameDeviceToken(@Param("token")String token, @Param("uid")String uid);
-
+    @Query("UPDATE SnapUser u set u.deviceToken = null where u.deviceToken = :token AND u.identifier != :email")
+    void clearUsersWithSameDeviceToken(@Param("token") String token, @Param("email") String email);
     Optional<SnapUser> findByIdAndActiveTrue(Long id);
 }

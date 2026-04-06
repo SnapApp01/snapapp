@@ -30,18 +30,11 @@ public class WebSecurityConfig {
             "/api/v1/auth/**",
             "/api/v1/panel/**",
             "/api/v1/media/**",
-            "/api/v1/addons/**",
             "/verify-email/**",
-            "/api/v1/room-types/**",
-            "/api/v1/odoo/**",
             "/api/v1/packages/**",
-            "/api/v1/user-details/**",
             "/api/v1/payments/**",
             "/api/v1/users/**",
-            "/api/v1/bookings/**",
-            "/api/v1/blog-posts/**",
             "/api/payments/callback",
-            "/api/v1/itinerary-days/**",
             "/actuator/health",
             "/actuator/info",
             "/health",
@@ -49,7 +42,8 @@ public class WebSecurityConfig {
             "/favicon.ico",
             "/v3/api-docs/**",
             "/swagger-ui/**",
-            "/swagger-ui.html"
+            "/swagger-ui.html",
+            "/swagger-ui/index.html"
     };
 
     public WebSecurityConfig(UserDetailsServiceImpl userDetailsService,

@@ -57,26 +57,12 @@ public class UserDetailController {
 //            .build();
 //}
 
-//    @PostMapping
-//    public UserDetailResponse create(@RequestHeader(Constants.HEADER_USER_ID)String userId,
-//                                     @Validated @RequestBody CreateUserDetailRequest request) {
-//        request.setUserId(userId);
-//        userDetailService.createUser(request);
-//        return userDetailService.getUser(request.getUserId());
-//    }
-
     @PostMapping
     public ResponseEntity<GenericResponse> create(@RequestBody @Valid CreateUserDetailRequest request) {
         GenericResponse response = userDetailService.createUser(request);
         return new ResponseEntity<>(response, response.getHttpStatus());
     }
 
-//    @PutMapping
-//    public UserDetailResponse update(@RequestHeader(Constants.HEADER_USER_ID)String userId,
-//                                     @Validated @RequestBody UpdateUserDetailRequest request){
-//        userDetailService.updateUser(request, userId);
-//        return userDetailService.getUser(userId);
-//    }
 @PutMapping
 public UserDetailResponse update(
         @Validated @RequestBody UpdateUserDetailRequest request) {
@@ -87,14 +73,13 @@ public UserDetailResponse update(
     return userDetailService.getUser(user.getId());
 }
 
-//@PostMapping("/business")
-//public UserDetailResponse createBusiness(
-//        @Validated @RequestBody CreateUserDetailWithBusinessRequest request) {
-//
-//    SnapUser user = securityUtil.getCurrentLoggedInUser();
-//    userDetailService.createUser(request);
-//    return userDetailService.getUser(user.getId());
-//}
+    @PutMapping("/device-key")
+    public ResponseEntity<SnapUser> updateDeviceKey(
+            @RequestParam String deviceKey) {
+        SnapUser loggedInUser = securityUtil.getCurrentLoggedInUser();
+        SnapUser user = userService.withDeviceKey(loggedInUser.getEmail(), deviceKey);
+        return ResponseEntity.ok(user);
+    }
 
     @PostMapping("/business")
     public ResponseEntity<GenericResponse> createBusiness(@RequestBody @Valid CreateUserDetailWithBusinessRequest request) {
@@ -102,11 +87,6 @@ public UserDetailResponse update(
         return new ResponseEntity<>(response, response.getHttpStatus());
     }
 
-//    @PutMapping("/business")
-//    public UserDetailResponse addBusiness(@Validated @RequestBody AddBusinessRequest request, @RequestHeader(Constants.HEADER_USER_ID) String userId) {
-//        userDetailService.addBusiness(request, userId);
-//        return userDetailService.getUser(userId);
-//    }
 @PutMapping("/business")
 public UserDetailResponse addBusiness(
         @Validated @RequestBody AddBusinessRequest request) {
@@ -117,13 +97,6 @@ public UserDetailResponse addBusiness(
     return userDetailService.getUser(user.getId());
 }
 
-//
-//    @PutMapping("/business/{status}")
-//    public UserDetailResponse updateBusinessOnlineStatus(@PathVariable(name = "status")Boolean status,
-//                                                         @RequestHeader(Constants.HEADER_USER_ID) String userId) {
-//        userDetailService.updateBusinessStatus(status,userId);
-//        return userDetailService.getUser(userId);
-//    }
 @PutMapping("/business/{status}")
 public UserDetailResponse updateBusinessOnlineStatus(
         @PathVariable Boolean status) {

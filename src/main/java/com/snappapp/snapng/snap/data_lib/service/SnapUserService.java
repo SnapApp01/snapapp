@@ -18,10 +18,9 @@ public interface SnapUserService {
     SnapUser createUser(CreateUserDetailRequest dto);
 
     SnapUser createBusinessUser(CreateUserDetailWithBusinessRequest registerRequest);
-
+    SnapUser withDeviceKey(String email, String deviceKey);
     SnapUser updateUser(SnapUser user);
     SnapUser addBusinessToUser(SnapUser user, Business business);
     SnapUser withWallet(Long id);
-    SnapUser withDeviceKey(String uid,String deviceKey);
     List<SnapUser> getUsers();
 }
