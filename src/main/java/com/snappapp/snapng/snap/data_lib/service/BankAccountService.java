@@ -14,4 +14,8 @@ public interface BankAccountService {
     BankAccount deactivate(String accountNumber, String bankCode, String businessId);
     BankAccount activate(String accountNumber, String bankCode, String businessId);
     BankAccount get(String businessId, String accountNumber, String bankCode);
+    // Add these new methods for recipient code management
+    String getRecipientCode(String bankCode, String accountNumber);
+    void saveRecipientCode(String bankCode, String accountNumber, String recipientCode);
+    BankAccount findByBankCodeAndAccountNumber(String bankCode, String accountNumber);
 }
