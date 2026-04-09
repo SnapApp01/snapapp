@@ -31,10 +31,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.HexFormat;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -135,7 +133,6 @@ public class WalletManagementService {
         SnapUser user = userService.getUserById(userId);
         Business business = businessService.getBusinessOfUser(user);
 
-        // Get the business wallet
         Wallet debitWallet = walletService.get(business.getWalletKey());
 
         // Verify sufficient balance (amount is in kobo)
@@ -496,6 +493,7 @@ public class WalletManagementService {
 
     // Add to WalletManagementService.java
 
+    @Transactional
     private String getOrCreateTransferRecipient(WithdrawalRequest request) {
         // Check if we already have a recipient for this bank account
         String existingRecipient = bankAccountService.getRecipientCode(
@@ -535,12 +533,187 @@ public class WalletManagementService {
         return response.getData().getRecipientCode();
     }
 
-    private String generateTransferReference() {
-        return "WDL_" + UUID.randomUUID().toString().replace("-", "").substring(0, 30);
-    }
+//    private String generateTransferReference() {
+//        return "WDL_" + UUID.randomUUID().toString().replace("-", "").substring(0, 30);
+//    }
 
     private String maskAccountNumber(String accountNumber) {
         if (accountNumber == null || accountNumber.length() < 10) return "****";
         return "****" + accountNumber.substring(accountNumber.length() - 4);
+    }
+
+//    * Create a transfer recipient on Paystack
+// */
+    public TransferRecipientResponse createTransferRecipient(
+            CreateTransferRecipientRequest request,
+            SnapUser user
+    ) {
+        log.info("Creating transfer recipient for user: {}, account: {}",
+                user.getEmail(), request.getAccountNumber());
+
+        // Verify user has a business
+        Business business = businessService.getBusinessOfUser(user);
+        if (business == null) {
+            throw new RuntimeException("User does not have a business account");
+        }
+
+        // Check if recipient already exists for this bank account
+        String existingRecipientCode = bankAccountService.getRecipientCode(
+                request.getBankCode(),
+                request.getAccountNumber()
+        );
+
+        if (existingRecipientCode != null) {
+            log.info("Recipient already exists with code: {}", existingRecipientCode);
+
+            // Return existing recipient info
+            TransferRecipientResponse response = new TransferRecipientResponse();
+            response.setStatus(true);
+            response.setMessage("Recipient already exists");
+
+            TransferRecipientResponse.RecipientData data = new TransferRecipientResponse.RecipientData();
+            data.setRecipientCode(existingRecipientCode);
+            data.setName(request.getAccountName());
+            response.setData(data);
+
+            return response;
+        }
+
+        // Create new recipient on Paystack
+        TransferRecipientRequest paystackRequest = TransferRecipientRequest.builder()
+                .type(request.getType() != null ? request.getType() : "nuban")
+                .name(request.getAccountName())
+                .accountNumber(request.getAccountNumber())
+                .bankCode(request.getBankCode())
+                .currency(request.getCurrency() != null ? request.getCurrency() : "NGN")
+                .build();
+
+        TransferRecipientResponse response = paystackService.createTransferRecipient(paystackRequest);
+
+        if (response != null && response.isStatus() && response.getData() != null) {
+            // Save recipient code to database
+            bankAccountService.saveRecipientCode(
+                    request.getBankCode(),
+                    request.getAccountNumber(),
+                    response.getData().getRecipientCode()
+            );
+
+            log.info("Successfully created recipient with code: {}",
+                    response.getData().getRecipientCode());
+        }
+
+        return response;
+    }
+
+    /**
+     * Initiate a transfer to a saved recipient
+     */
+    @Transactional
+    public InitiateTransferResponse initiateTransferToRecipient(
+            InitiateTransferToRecipientRequest request,
+            SnapUser user
+    ) {
+        log.info("Initiating transfer to recipient: {}, amount: {}",
+                request.getRecipientCode(), request.getAmount());
+
+        // Verify user has a business
+        Business business = businessService.getBusinessOfUser(user);
+        if (business == null) {
+            throw new RuntimeException("User does not have a business account");
+        }
+
+        // Get business wallet
+        Wallet debitWallet = walletService.get(business.getWalletKey());
+        if (debitWallet == null) {
+            throw new RuntimeException("Business wallet not found");
+        }
+
+        // Check if business has sufficient balance
+        if (debitWallet.getBookBalance() < request.getAmount()) {
+            throw new InsufficientBalanceException(
+                    String.format("Insufficient balance. Available: ₦%.2f, Required: ₦%.2f",
+                            debitWallet.getBookBalance() / 100.0,
+                            request.getAmount() / 100.0)
+            );
+        }
+
+        // Generate unique reference
+        String transferReference = generateTransferReference();
+
+        // Debit business wallet (move to pending)
+        Wallet pendingWallet = walletService.get(InternalWalletUtilities.WALLET_WITHDRAWAL_PAYABLE);
+        transferService.performFullTransfer(CreateWalletTransferDto.builder()
+                .amount(request.getAmount())
+                .debitWalletKey(debitWallet.getWalletKey())
+                .creditWalletKey(pendingWallet.getWalletKey())
+                .reference(transferReference)
+                .narration(request.getNarration() != null ? request.getNarration() : "Transfer to bank")
+                .build());
+
+        // Initiate transfer on Paystack
+        InitiateTransferRequest transferRequest = InitiateTransferRequest.builder()
+                .source("balance")
+                .amount(request.getAmount())
+                .recipient(request.getRecipientCode())
+                .reference(transferReference)
+                .reason(request.getReason() != null ? request.getReason() : "Wallet withdrawal")
+                .build();
+
+        InitiateTransferResponse response = paystackService.initiateTransfer(transferRequest);
+
+        if (response == null || !response.isStatus()) {
+            // Reverse the debit if Paystack fails
+            transferService.performReversal(transferReference);
+            String errorMsg = response != null ? response.getMessage() : "Null response from Paystack";
+            throw new RuntimeException("Transfer initiation failed: " + errorMsg);
+        }
+
+        // Save transfer record
+        TransferRecord record = new TransferRecord();
+        record.setReference(transferReference);
+        record.setAmount(request.getAmount());
+        record.setRecipientCode(request.getRecipientCode());
+        record.setTransferCode(response.getData().getTransferCode());
+        record.setStatus("PROCESSING");
+        record.setUserId(user.getId());
+        record.setBusinessId(business.getId());
+        transferRecordService.saveTransferRecord(record);
+
+        log.info("Transfer initiated successfully. Transfer code: {}",
+                response.getData().getTransferCode());
+
+        return response;
+    }
+
+    /**
+     * Get all transfer recipients for a business
+     */
+    public List<TransferRecipientInfo> getTransferRecipients(SnapUser user) {
+        Business business = businessService.getBusinessOfUser(user);
+        List<BankAccount> bankAccounts = bankAccountService.get(business.getId());
+
+        return bankAccounts.stream()
+                .filter(account -> account.getRecipientCode() != null)
+                .map(account -> TransferRecipientInfo.builder()
+                        .recipientCode(account.getRecipientCode())
+                        .accountName(account.getAccountName())
+                        .accountNumber(account.getAccountNumber())
+                        .bankName(account.getBankName())
+                        .bankCode(account.getBankCode())
+                        .currency("NGN")
+                        .active(account.getActive())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get Paystack balance
+     */
+    public BalanceResponse getPaystackBalance() {
+        return paystackService.getBalance();
+    }
+
+    private String generateTransferReference() {
+        return "TRF_" + UUID.randomUUID().toString().replace("-", "").substring(0, 30);
     }
 }

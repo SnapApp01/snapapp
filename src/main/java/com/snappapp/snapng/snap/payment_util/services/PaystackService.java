@@ -17,6 +17,9 @@ public interface PaystackService {
     InitiateTransferResponse initiateTransfer(InitiateTransferRequest request);
     TransferVerificationResponse verifyTransfer(String reference);
     AccountEnquiryResponse enquiryAccount(String accountNumber, String bankCode);
+
+    BalanceResponse getBalance();
+
     List<BankResponse> getBanks();
 
     boolean verifySignature(String payload, String signature);

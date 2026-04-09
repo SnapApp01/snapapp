@@ -1,15 +1,11 @@
 package com.snappapp.snapng.snap.payment_util.services;
 
 import com.snappapp.snapng.snap.app_service.apimodels.transfer.*;
-import com.snappapp.snapng.snap.data_lib.dtos.CreateWalletTransferDto;
 import com.snappapp.snapng.snap.payment_util.clients.PaystackClient;
 import com.snappapp.snapng.snap.payment_util.paystack.AccountEnquiryResponse;
 import com.snappapp.snapng.snap.payment_util.paystack.BankResponse;
 import com.snappapp.snapng.snap.payment_util.paystack.InitialPaymentResponse;
 import com.snappapp.snapng.snap.payment_util.paystack.InitializePaymentRequest;
-import com.snappapp.snapng.snap.payment_util.services.PaystackService;
-import com.snappapp.snapng.snap.utils.utilities.InternalWalletUtilities;
-import com.snappapp.snapng.snap.utils.utilities.MoneyUtilities;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +15,6 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HexFormat;
@@ -76,7 +71,30 @@ public class PaystackServiceImpl implements PaystackService {
             return response;
         } catch (Exception e) {
             log.error("Error enquiring account for account number: {} - Exception: {}", accountNumber, e.getMessage(), e);
-            throw e;  // Re-throw or handle appropriately
+            throw e;
+        }
+    }
+
+    @Override
+    public BalanceResponse getBalance() {
+        String url = "https://api.paystack.co/balance";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + secretKey);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<BalanceResponse> response = restTemplate.exchange(
+                    url, HttpMethod.GET, entity, BalanceResponse.class
+            );
+
+            log.info("Paystack balance retrieved: {}", response.getBody());
+            return response.getBody();
+
+        } catch (Exception e) {
+            log.error("Failed to get Paystack balance", e);
+            throw new RuntimeException("Failed to get Paystack balance", e);
         }
     }
 
