@@ -70,6 +70,6 @@ public class BankAccountController {
     public List<BankAccountResponse> getBankAccounts(){
         SnapUser user = securityUtil.getCurrentLoggedInUser();
         Business business = businessService.getBusinessOfUser(user);
-        return bankAccountService.get(business.getCode()).stream().map(e->BankAccountResponse.builder().bankAccount(e).build()).toList();
+        return bankAccountService.get(business.getId()).stream().map(e->BankAccountResponse.builder().bankAccount(e).build()).toList();
     }
 }
