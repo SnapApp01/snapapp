@@ -18,7 +18,7 @@ public class BankAccount extends BaseEntity {
     private String bankCode;
     private String accountNumber;
     private String accountName;
-    private String businessId;
+    private Long businessId;
     @Column(name = "recipient_code")
     private String recipientCode;
 }

@@ -24,7 +24,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
-    public List<BankAccount> get(String businessId) {
+    public List<BankAccount> get(Long businessId) {
         return repo.findByBusinessIdAndActiveTrue(businessId);
     }
 
@@ -49,7 +49,7 @@ public class BankAccountServiceImpl implements BankAccountService {
                 .bankName(dto.getBankName())
                 .accountName(dto.getAccountName())
                 .bankCode(dto.getBankCode())
-                .businessId(business.getCode())
+                .businessId(business.getId())
                 .build();
         account.setActive(true);
         return repo.save(account);
@@ -80,7 +80,7 @@ public class BankAccountServiceImpl implements BankAccountService {
 //    }
 
     @Override
-    public BankAccount deactivate(String accountNumber, String bankCode, String businessId) {
+    public BankAccount deactivate(String accountNumber, String bankCode, Long businessId) {
         BankAccount account = repo
                 .findFirstByBusinessIdAndAccountNumberAndBankCode(businessId,
                         accountNumber, bankCode).orElse(null);
@@ -90,7 +90,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
-    public BankAccount activate(String accountNumber, String bankCode, String businessId) {
+    public BankAccount activate(String accountNumber, String bankCode, Long businessId) {
         BankAccount account = repo
                 .findFirstByBusinessIdAndAccountNumberAndBankCode(businessId,
                         accountNumber, bankCode).orElse(null);
@@ -100,7 +100,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
-    public BankAccount get(String businessId, String accountNumber, String bankCode) {
+    public BankAccount get(Long businessId, String accountNumber, String bankCode) {
         return repo
                 .findFirstByBusinessIdAndAccountNumberAndBankCode(businessId,
                         accountNumber, bankCode).orElse(null);

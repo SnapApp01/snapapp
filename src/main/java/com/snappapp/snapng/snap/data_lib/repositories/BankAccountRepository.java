@@ -13,18 +13,14 @@ import java.util.Optional;
 
 @Repository
 public interface BankAccountRepository extends JpaRepository<BankAccount,Long> {
-    List<BankAccount> findByBusinessIdAndActiveTrue(String businessId);
-    Optional<BankAccount> findFirstByBusinessId(String businessId);
-    Optional<BankAccount> findByBusinessIdAndAccountNumberAndBankCode(
-            Long businessId,
-            String accountNumber,
-            String bankCode
-    );
-    Optional<BankAccount> findFirstByBusinessIdAndAccountNumberAndBankCode(String businessId, String accountNumber, String bankCode);
+    List<BankAccount> findByBusinessIdAndActiveTrue(Long businessId);
+    Optional<BankAccount> findFirstByBusinessId(Long businessId);
+    Optional<BankAccount> findByBusinessIdAndAccountNumberAndBankCode(Long businessId, String accountNumber, String bankCode);
+    Optional<BankAccount> findFirstByBusinessIdAndAccountNumberAndBankCode(Long businessId, String accountNumber, String bankCode);
 
-    List<BankAccount> findByBusinessId(String businessId);
+    List<BankAccount> findByBusinessId(Long businessId);
 
-    Optional<BankAccount> findByBusinessIdAndId(String businessId, Long id);
+    Optional<BankAccount> findByBusinessIdAndId(Long businessId, Long id);
 
     // Add these methods for recipient code management
     Optional<BankAccount> findByBankCodeAndAccountNumber(String bankCode, String accountNumber);

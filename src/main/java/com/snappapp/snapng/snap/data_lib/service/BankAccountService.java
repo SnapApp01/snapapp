@@ -9,11 +9,11 @@ import java.util.List;
 
 @Component
 public interface BankAccountService {
-    List<BankAccount> get(String businessId);
+    List<BankAccount> get(Long businessId);
     BankAccount save(BankAccountDto dto, Business business);
-    BankAccount deactivate(String accountNumber, String bankCode, String businessId);
-    BankAccount activate(String accountNumber, String bankCode, String businessId);
-    BankAccount get(String businessId, String accountNumber, String bankCode);
+    BankAccount deactivate(String accountNumber, String bankCode, Long businessId);
+    BankAccount activate(String accountNumber, String bankCode, Long businessId);
+    BankAccount get(Long businessId, String accountNumber, String bankCode);
     // Add these new methods for recipient code management
     String getRecipientCode(String bankCode, String accountNumber);
     void saveRecipientCode(String bankCode, String accountNumber, String recipientCode);
