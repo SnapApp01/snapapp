@@ -14,6 +14,7 @@ public class TransferRecipientResponse {
         private String name;
         private String type;
         private String currency;
+        private boolean active;
         private Details details;
         
         @Data

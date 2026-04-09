@@ -1,5 +1,6 @@
 package com.snappapp.snapng.snap.payment_util.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.snappapp.snapng.snap.app_service.apimodels.transfer.*;
 import com.snappapp.snapng.snap.payment_util.clients.PaystackClient;
 import com.snappapp.snapng.snap.payment_util.paystack.AccountEnquiryResponse;
@@ -140,6 +141,8 @@ public class PaystackServiceImpl implements PaystackService {
 
     // In PaystackServiceImpl.java - update createTransferRecipient method
 
+    // In PaystackServiceImpl.java
+
     @Override
     public TransferRecipientResponse createTransferRecipient(TransferRecipientRequest request) {
         String url = "https://api.paystack.co/transferrecipient";
@@ -158,36 +161,126 @@ public class PaystackServiceImpl implements PaystackService {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
         try {
-            ResponseEntity<TransferRecipientResponse> response = restTemplate.postForEntity(
-                    url, entity, TransferRecipientResponse.class
-            );
+            // Get raw response as JsonNode first
+            ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, entity, JsonNode.class);
+            JsonNode root = response.getBody();
 
-            // Log the full response for debugging
-            log.info("Paystack create recipient response status: {}", response.getStatusCode());
-            log.info("Paystack create recipient response body: {}", response.getBody());
+            log.info("Raw Paystack response: {}", root);
 
-            if (response.getBody() == null) {
-                log.error("Null response from Paystack create transfer recipient");
-                throw new RuntimeException("Null response from Paystack");
+            // Manually extract values
+            TransferRecipientResponse result = new TransferRecipientResponse();
+            result.setStatus(root.path("status").asBoolean());
+            result.setMessage(root.path("message").asText());
+
+            if (result.isStatus() && root.has("data")) {
+                JsonNode dataNode = root.path("data");
+
+                TransferRecipientResponse.RecipientData data = new TransferRecipientResponse.RecipientData();
+
+                // Try both camelCase and snake_case field names
+                if (dataNode.has("recipient_code")) {
+                    data.setRecipientCode(dataNode.get("recipient_code").asText());
+                } else if (dataNode.has("recipientCode")) {
+                    data.setRecipientCode(dataNode.get("recipientCode").asText());
+                }
+
+                data.setName(dataNode.path("name").asText());
+                data.setType(dataNode.path("type").asText());
+                data.setCurrency(dataNode.path("currency").asText());
+                data.setActive(dataNode.path("active").asBoolean());
+
+                if (dataNode.has("details")) {
+                    JsonNode detailsNode = dataNode.path("details");
+                    TransferRecipientResponse.RecipientData.Details details =
+                            new TransferRecipientResponse.RecipientData.Details();
+
+                    if (detailsNode.has("account_number")) {
+                        details.setAccountNumber(detailsNode.get("account_number").asText());
+                    } else if (detailsNode.has("accountNumber")) {
+                        details.setAccountNumber(detailsNode.get("accountNumber").asText());
+                    }
+
+                    if (detailsNode.has("bank_code")) {
+                        details.setBankCode(detailsNode.get("bank_code").asText());
+                    } else if (detailsNode.has("bankCode")) {
+                        details.setBankCode(detailsNode.get("bankCode").asText());
+                    }
+
+                    if (detailsNode.has("bank_name")) {
+                        details.setBankName(detailsNode.get("bank_name").asText());
+                    } else if (detailsNode.has("bankName")) {
+                        details.setBankName(detailsNode.get("bankName").asText());
+                    }
+
+                    data.setDetails(details);
+                }
+
+                result.setData(data);
             }
 
-            if (!response.getBody().isStatus()) {
-                log.error("Paystack create recipient failed: {}", response.getBody().getMessage());
-                throw new RuntimeException("Paystack create recipient failed: " + response.getBody().getMessage());
-            }
+            log.info("Parsed recipient code: {}", result.getData() != null ? result.getData().getRecipientCode() : "null");
 
-            if (response.getBody().getData() == null || response.getBody().getData().getRecipientCode() == null) {
-                log.error("Paystack response missing recipient code: {}", response.getBody());
+            if (result.getData() == null || result.getData().getRecipientCode() == null) {
+                log.error("Still missing recipient code after parsing");
                 throw new RuntimeException("Paystack response missing recipient code");
             }
 
-            return response.getBody();
+            return result;
 
         } catch (Exception e) {
             log.error("Failed to create transfer recipient", e);
             throw new RuntimeException("Paystack create recipient failed: " + e.getMessage(), e);
         }
     }
+
+//    @Override
+//    public TransferRecipientResponse createTransferRecipient(TransferRecipientRequest request) {
+//        String url = "https://api.paystack.co/transferrecipient";
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.set("Authorization", "Bearer " + secretKey);
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//
+//        Map<String, Object> body = new HashMap<>();
+//        body.put("type", request.getType());
+//        body.put("name", request.getName());
+//        body.put("account_number", request.getAccountNumber());
+//        body.put("bank_code", request.getBankCode());
+//        body.put("currency", request.getCurrency());
+//
+//        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+//
+//        try {
+//            ResponseEntity<TransferRecipientResponse> response = restTemplate.postForEntity(
+//                    url, entity, TransferRecipientResponse.class
+//            );
+//
+//            // Log the full response for debugging
+//            log.info("Paystack create recipient response status: {}", response.getStatusCode());
+//            log.info("Paystack create recipient response body: {}", response.getBody());
+//
+//            if (response.getBody() == null) {
+//                log.error("Null response from Paystack create transfer recipient");
+//                throw new RuntimeException("Null response from Paystack");
+//            }
+//
+//            if (!response.getBody().isStatus()) {
+//                log.error("Paystack create recipient failed: {}", response.getBody().getMessage());
+//                throw new RuntimeException("Paystack create recipient failed: " + response.getBody().getMessage());
+//            }
+//
+//            if (response.getBody().getData() == null || response.getBody().getData().getRecipientCode() == null) {
+//                log.error("Paystack response missing recipient code: {}", response.getBody());
+//                throw new RuntimeException("Paystack response missing recipient code");
+//            }
+//
+//            return response.getBody();
+//
+//        } catch (Exception e) {
+//            log.error("Failed to create transfer recipient", e);
+//            throw new RuntimeException("Paystack create recipient failed: " + e.getMessage(), e);
+//        }
+//    }
 //    @Override
 //    public TransferRecipientResponse createTransferRecipient(TransferRecipientRequest request) {
 //        String url = "https://api.paystack.co/transferrecipient";
