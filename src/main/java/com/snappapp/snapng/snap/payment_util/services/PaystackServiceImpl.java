@@ -120,6 +120,8 @@ public class PaystackServiceImpl implements PaystackService {
         }
     }
 
+    // In PaystackServiceImpl.java - update createTransferRecipient method
+
     @Override
     public TransferRecipientResponse createTransferRecipient(TransferRecipientRequest request) {
         String url = "https://api.paystack.co/transferrecipient";
@@ -142,9 +144,23 @@ public class PaystackServiceImpl implements PaystackService {
                     url, entity, TransferRecipientResponse.class
             );
 
+            // Log the full response for debugging
+            log.info("Paystack create recipient response status: {}", response.getStatusCode());
+            log.info("Paystack create recipient response body: {}", response.getBody());
+
             if (response.getBody() == null) {
                 log.error("Null response from Paystack create transfer recipient");
                 throw new RuntimeException("Null response from Paystack");
+            }
+
+            if (!response.getBody().isStatus()) {
+                log.error("Paystack create recipient failed: {}", response.getBody().getMessage());
+                throw new RuntimeException("Paystack create recipient failed: " + response.getBody().getMessage());
+            }
+
+            if (response.getBody().getData() == null || response.getBody().getData().getRecipientCode() == null) {
+                log.error("Paystack response missing recipient code: {}", response.getBody());
+                throw new RuntimeException("Paystack response missing recipient code");
             }
 
             return response.getBody();
@@ -154,6 +170,40 @@ public class PaystackServiceImpl implements PaystackService {
             throw new RuntimeException("Paystack create recipient failed: " + e.getMessage(), e);
         }
     }
+//    @Override
+//    public TransferRecipientResponse createTransferRecipient(TransferRecipientRequest request) {
+//        String url = "https://api.paystack.co/transferrecipient";
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.set("Authorization", "Bearer " + secretKey);
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//
+//        Map<String, Object> body = new HashMap<>();
+//        body.put("type", request.getType());
+//        body.put("name", request.getName());
+//        body.put("account_number", request.getAccountNumber());
+//        body.put("bank_code", request.getBankCode());
+//        body.put("currency", request.getCurrency());
+//
+//        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+//
+//        try {
+//            ResponseEntity<TransferRecipientResponse> response = restTemplate.postForEntity(
+//                    url, entity, TransferRecipientResponse.class
+//            );
+//
+//            if (response.getBody() == null) {
+//                log.error("Null response from Paystack create transfer recipient");
+//                throw new RuntimeException("Null response from Paystack");
+//            }
+//
+//            return response.getBody();
+//
+//        } catch (Exception e) {
+//            log.error("Failed to create transfer recipient", e);
+//            throw new RuntimeException("Paystack create recipient failed: " + e.getMessage(), e);
+//        }
+//    }
 
     @Override
     public InitiateTransferResponse initiateTransfer(InitiateTransferRequest request) {
